@@ -3,19 +3,23 @@ import edu.uab.cis.automaton._
 object Main {
 
   def main(args: Array[String]) = {
+    
+    println((a ++ Set(b,c,d)).accepts(""))
+    //println((a union Set(b,c,d)).accepts("b"))
+    
     //        println(((a)).isFinite)
     //a.minimize.print
     //println(a accepts "aa")
 
-    val state1 = new State()
-    state1.setInitial(true)
-    val state2 = new State()
-    state2.setFinal(true)
-    val transition = new Transition(state2, 'a')
-    state1.addTransition(transition)
-    val auto = new Automaton(Set(state1, state2))
-
-    println(a accepts "")
+//    val state1 = new State()
+//    state1.setInitial(true)
+//    val state2 = new State()
+//    state2.setFinal(true)
+//    val transition = new Transition(state2, 'a')
+//    state1.addTransition(transition)
+//    val auto = new Automaton(Set(state1, state2))
+//
+//    println(a accepts "")
     
     
     //    (((a)|(b))).print
@@ -24,8 +28,8 @@ object Main {
 
     //    	  println(((((a+b)*)|((c+d)*))+(((e+f)*)|((g+h)*))).states.size)
     //    	  println("****************")
-    //    	  ((((a+b)*)|((c+d)*))+(((e+f)*)|((g+h)*))).getDFA.removeIndistiguishableStates.removeDeadStates.print
-    //    	  println("****************")
+//        	  println(((c+d)*)+((a+b)*) accepts "ab")
+//        	  println("****************")
 
     //    val intersectTest1 = new Automaton
     //    val intersectTest2 = new Automaton

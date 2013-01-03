@@ -34,9 +34,7 @@ class Automaton(var states: Set[State]) {
   def |(automaton: Automaton): Automaton = union(automaton)
   
   def union(automata: Set[Automaton]): Automaton = {
-    automata.foldLeft(this)((accumulator: Automaton, element: Automaton) =>
-      accumulator | element
-    )
+    (automata).reduceRight(_|_)|this
   }
 
   def repeat(): Automaton = {
@@ -79,6 +77,11 @@ class Automaton(var states: Set[State]) {
     new Automaton(this.states union automaton.states)
   }
   def +(automaton: Automaton) = concatenate(automaton)
+  
+  def concatenate(automata: Set[Automaton]): Automaton = {
+    this+(automata).reduceRight(_+_)
+  }
+  def ++(automata: Set[Automaton]): Automaton = this.concatenate(automata)
 
   def minus(automaton: Automaton): Automaton= {
     this.intersect(automaton.complement)
@@ -171,7 +174,9 @@ class Automaton(var states: Set[State]) {
     new Automaton(newStates)
   }
 
-  def removeNondisinguishableStates(): Automaton = {
+  //bug with method:
+  //(a union Set(b,c,d)).removeUnreachableStates.removeNondisinguishableStates.removeDeadStates.print
+  def removeNondistinguishableStates(): Automaton = {
 
     def removeIndistiguishableStates_r(): Automaton = {
       val originalStates = this.states
@@ -208,7 +213,7 @@ class Automaton(var states: Set[State]) {
     }
 
     if (!this.isDeterministic) {
-      this.getDFA.removeNondisinguishableStates
+      this.getDFA.removeNondistinguishableStates
     } else {
       removeIndistiguishableStates_r
     }
@@ -253,7 +258,7 @@ class Automaton(var states: Set[State]) {
   }
 
   def minimize(): Automaton = {
-    this.removeUnreachableStates.removeNondisinguishableStates.removeDeadStates
+    this.removeUnreachableStates.removeNondistinguishableStates.removeDeadStates
   }
 
   def isFinite(): Boolean = {
@@ -277,33 +282,33 @@ class Automaton(var states: Set[State]) {
     (this intersect automaton) == this
   }
   
-  def toRegex(): String = {
-
-    val newStart = new State
-    newStart.setInitial(true)
-    newStart.setFinal(true)
-
-    val newEnd = new State
-    newEnd.setInitial(true)
-    newEnd.setFinal(true)
-
-    val automaton = (new Automaton(Set(newStart)) + this + new Automaton(Set(newEnd))).minimize
-
-    automaton.toRegex_r
-  }
-
-  def toRegex_r(): String = {
-
-    states.foreach(state => {
-      states.foreach(stateToMatch => {
-        if (state.getTransitions.filter(_.end == stateToMatch).size > 1) {
-          val transitionsToRemove = state.getTransitions.filter(_.end == stateToMatch)
-          println(transitionsToRemove.reduceRight(_ | _).getLabel)
-          state.removeTransitions(transitionsToRemove)
-        }
-      })
-    })
-
-    new String
-  }
+//  def toRegex(): String = {
+//
+//    val newStart = new State
+//    newStart.setInitial(true)
+//    newStart.setFinal(true)
+//
+//    val newEnd = new State
+//    newEnd.setInitial(true)
+//    newEnd.setFinal(true)
+//
+//    val automaton = (new Automaton(Set(newStart)) + this + new Automaton(Set(newEnd))).minimize
+//
+//    automaton.toRegex_r
+//  }
+//
+//  def toRegex_r(): String = {
+//
+//    states.foreach(state => {
+//      states.foreach(stateToMatch => {
+//        if (state.getTransitions.filter(_.end == stateToMatch).size > 1) {
+//          val transitionsToRemove = state.getTransitions.filter(_.end == stateToMatch)
+//          println(transitionsToRemove.reduceRight(_ | _).getLabel)
+//          state.removeTransitions(transitionsToRemove)
+//        }
+//      })
+//    })
+//
+//    new String
+//  }
 }
