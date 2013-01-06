@@ -4,7 +4,10 @@ object Main {
 
   def main(args: Array[String]) = {
     
-    println((a ++ Set(b,c,d)).accepts(""))
+    a.getDFA.print
+    println(a.getDFA.getTransitionCount)
+
+    
     //println((a union Set(b,c,d)).accepts("b"))
     
     //        println(((a)).isFinite)
