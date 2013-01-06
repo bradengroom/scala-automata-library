@@ -282,6 +282,16 @@ class Automaton(var states: Set[State]) {
     (this intersect automaton) == this
   }
 
+  def substitute(oldChar: Char, newChar: Char): Automaton = {
+    this.states.foreach(state => {
+      state.getTransitions.filter(_.char == oldChar).foreach(transition => {
+          state.addTransition(new Transition(transition.end, newChar))
+          state.removeTransition(transition)
+      })
+    })
+    this
+  }
+
   //  def toRegex(): String = {
   //
   //    val newStart = new State
