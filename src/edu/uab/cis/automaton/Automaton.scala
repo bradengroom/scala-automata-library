@@ -5,10 +5,10 @@ class Automaton(var states: Set[State]) {
   def this() = this(Set())
 
   //add and remove states
-  def addState(state: State) = { this.states += state }
-  def removeState(state: State) = { this.states -= state }
-  def addStates(states: Set[State]) = { this.states ++= states }
-  def removeStates(states: Set[State]) = { this.states --= states }
+  def addState(state: State) = this.states += state 
+  def removeState(state: State) = this.states -= state
+  def addStates(states: Set[State]) = this.states ++= states
+  def removeStates(states: Set[State]) = this.states --= states
 
   def complement(): Automaton = new Automaton(this.getDFA.states.map((state: State) => state.complement))
 
@@ -31,12 +31,13 @@ class Automaton(var states: Set[State]) {
 
     new Automaton(unionedStates + startState)
   }
+  
   def |(automaton: Automaton): Automaton = union(automaton)
 
   def union(automata: Set[Automaton]): Automaton = {
     (automata).reduceRight(_ | _) | this
   }
-
+  
   def repeat(): Automaton = {
 
     //new start state
@@ -55,6 +56,7 @@ class Automaton(var states: Set[State]) {
 
     new Automaton(states + startState)
   }
+  
   def *() = repeat()
 
   //needs more testing
@@ -76,16 +78,19 @@ class Automaton(var states: Set[State]) {
     automaton.getInitialState.setInitial(false)
     new Automaton(this.states union automaton.states)
   }
+  
   def +(automaton: Automaton) = concatenate(automaton)
 
   def concatenate(automata: Set[Automaton]): Automaton = {
     this + (automata).reduceRight(_ + _)
   }
+  
   def ++(automata: Set[Automaton]): Automaton = this.concatenate(automata)
 
   def minus(automaton: Automaton): Automaton = {
     this.intersect(automaton.complement)
   }
+  
   def -(automaton: Automaton): Automaton = this.minus(automaton)
 
   def optional(): Automaton = {
@@ -101,6 +106,7 @@ class Automaton(var states: Set[State]) {
     automaton.getInitialState.addTransition(new Transition(automaton.getFinalStates.head))
     automaton
   }
+  
   def ?(): Automaton = this.optional()
 
   def print() = {
@@ -276,6 +282,7 @@ class Automaton(var states: Set[State]) {
   def equals(automaton: Automaton): Boolean = {
     ((this intersect (automaton.complement)) union ((this.complement) intersect automaton)).isEmpty
   }
+  
   def ==(automaton: Automaton): Boolean = this.equals(automaton)
 
   def isSubsetOf(automaton: Automaton): Boolean = {
