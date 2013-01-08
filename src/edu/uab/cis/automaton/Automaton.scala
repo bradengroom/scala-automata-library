@@ -12,8 +12,8 @@ class Automaton(var states: Set[State]) {
 
   def complement(): Automaton = new Automaton(this.getDFA.states.map((state: State) => state.complement))
 
-  def relativeComplement(alphabet: Set[Char]): Automaton = new Automaton(this.getRelativeDFA(alphabet).states.map((state: State) => state.complement))
-  def relativeComplement(automaton: Automaton): Automaton = new Automaton(this.getRelativeDFA(this.getAlphabet | automaton.getAlphabet).states.map((state: State) => state.complement))
+//  def relativeComplement(alphabet: Set[Char]): Automaton = new Automaton(this.getRelativeDFA(alphabet).states.map((state: State) => state.complement))
+//  def relativeComplement(automaton: Automaton): Automaton = this.complement.intersect(automaton)
 
   def union(automaton: Automaton): Automaton = {
     //new start state

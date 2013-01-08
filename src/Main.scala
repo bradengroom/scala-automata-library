@@ -4,10 +4,6 @@ object Main {
 
   def main(args: Array[String]) = {
     
-    val aut = a.getDFA
-    aut.print
-    println("********")
-    aut.substitute('a', 'b').print
 
     
     //println((a union Set(b,c,d)).accepts("b"))
