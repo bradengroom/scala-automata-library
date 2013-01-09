@@ -1,25 +1,32 @@
 package edu.uab.cis.automaton;
-class basicAutomaton(val char: Char) extends Automaton {
+
+object BasicAutomaton {
 
   def basicAutomaton(char: Char): Automaton = {
     val state1 = new State()
+    state1.setInitial(true)
     val state2 = new State()
+    state2.setFinal(true)
     val transition = new Transition(state2, char)
     state1.addTransition(transition)
-    new Automaton(Set(state1 , state2))
+    new Automaton(Set(state1, state2))
   }
-}
 
-  def range(begin: Char, end: Char) = {
-	  def range_r(x: Automaton, b: Char, e: Char) = {
-	    if (b equals e)
-	      x union b
-	    else
-	      range_r(x union b, b + 1, e)
-	  }
-	  range_r(Automaton(), begin, end)
+  def range(begin: Char, end: Char): Automaton = {
+    if (begin > end)
+      emptyAutomaton()
+    else if (begin equals end)
+      basicAutomaton(begin)
+    else
+      basicAutomaton(begin) union range((begin + 1).toChar, end)
   }
-  
+
+  def emptyAutomaton(): Automaton = {
+    val state = new State()
+    state.setInitial(true)
+    new Automaton(Set(state))
+  }
+
   def a(): Automaton = basicAutomaton('a')
   def b(): Automaton = basicAutomaton('b')
   def c(): Automaton = basicAutomaton('c')
@@ -72,3 +79,5 @@ class basicAutomaton(val char: Char) extends Automaton {
   def X(): Automaton = basicAutomaton('X')
   def Y(): Automaton = basicAutomaton('Y')
   def Z(): Automaton = basicAutomaton('Z')
+
+}

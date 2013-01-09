@@ -4,7 +4,7 @@ object Main {
 
   def main(args: Array[String]) = {
     
-
+	  BasicAutomaton.range('b','a').minimize.print
     
     //println((a union Set(b,c,d)).accepts("b"))
     

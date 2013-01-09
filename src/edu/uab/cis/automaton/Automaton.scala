@@ -5,15 +5,15 @@ class Automaton(var states: Set[State]) {
   def this() = this(Set())
 
   //add and remove states
-  def addState(state: State) = this.states += state 
+  def addState(state: State) = this.states += state
   def removeState(state: State) = this.states -= state
   def addStates(states: Set[State]) = this.states ++= states
   def removeStates(states: Set[State]) = this.states --= states
 
   def complement(): Automaton = new Automaton(this.getDFA.states.map((state: State) => state.complement))
 
-//  def relativeComplement(alphabet: Set[Char]): Automaton = new Automaton(this.getRelativeDFA(alphabet).states.map((state: State) => state.complement))
-//  def relativeComplement(automaton: Automaton): Automaton = this.complement.intersect(automaton)
+  //  def relativeComplement(alphabet: Set[Char]): Automaton = new Automaton(this.getRelativeDFA(alphabet).states.map((state: State) => state.complement))
+  //  def relativeComplement(automaton: Automaton): Automaton = this.complement.intersect(automaton)
 
   def union(automaton: Automaton): Automaton = {
     //new start state
@@ -31,13 +31,13 @@ class Automaton(var states: Set[State]) {
 
     new Automaton(unionedStates + startState)
   }
-  
+
   def |(automaton: Automaton): Automaton = union(automaton)
 
   def union(automata: Set[Automaton]): Automaton = {
     (automata).reduceRight(_ | _) | this
   }
-  
+
   def repeat(): Automaton = {
 
     //new start state
@@ -56,7 +56,7 @@ class Automaton(var states: Set[State]) {
 
     new Automaton(states + startState)
   }
-  
+
   def *() = repeat()
 
   //needs more testing
@@ -78,19 +78,19 @@ class Automaton(var states: Set[State]) {
     automaton.getInitialState.setInitial(false)
     new Automaton(this.states union automaton.states)
   }
-  
+
   def +(automaton: Automaton) = concatenate(automaton)
 
   def concatenate(automata: Set[Automaton]): Automaton = {
     this + (automata).reduceRight(_ + _)
   }
-  
+
   def ++(automata: Set[Automaton]): Automaton = this.concatenate(automata)
 
   def minus(automaton: Automaton): Automaton = {
     this.intersect(automaton.complement)
   }
-  
+
   def -(automaton: Automaton): Automaton = this.minus(automaton)
 
   def optional(): Automaton = {
@@ -106,7 +106,7 @@ class Automaton(var states: Set[State]) {
     automaton.getInitialState.addTransition(new Transition(automaton.getFinalStates.head))
     automaton
   }
-  
+
   def ?(): Automaton = this.optional()
 
   def print() = {
@@ -178,7 +178,10 @@ class Automaton(var states: Set[State]) {
   def removeDeadStates(): Automaton = {
     val newStates = this.states.filter((state: State) => { state.isFinal || !this.getFinalStates.forall(!state.hasPathTo(_)) })
     newStates.foreach(state => state.removeTransitions(state.getTransitions.filter(transition => !newStates.contains(transition.end))))
-    new Automaton(newStates)
+    if (newStates.size == 0)
+      BasicAutomaton.emptyAutomaton()
+    else
+      new Automaton(newStates)
   }
 
   //bug with method:
@@ -282,7 +285,7 @@ class Automaton(var states: Set[State]) {
   def equals(automaton: Automaton): Boolean = {
     ((this intersect (automaton.complement)) union ((this.complement) intersect automaton)).isEmpty
   }
-  
+
   def ==(automaton: Automaton): Boolean = this.equals(automaton)
 
   def isSubsetOf(automaton: Automaton): Boolean = {
@@ -292,8 +295,8 @@ class Automaton(var states: Set[State]) {
   def substitute(oldChar: Char, newChar: Char): Automaton = {
     this.states.foreach(state => {
       state.getTransitions.filter(_.char == oldChar).foreach(transition => {
-          state.addTransition(new Transition(transition.end, newChar))
-          state.removeTransition(transition)
+        state.addTransition(new Transition(transition.end, newChar))
+        state.removeTransition(transition)
       })
     })
     this
