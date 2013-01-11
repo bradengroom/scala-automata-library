@@ -1,334 +1,166 @@
 package edu.uab.cis.automaton;
 
-class Automaton(var states: Set[State]) {
+class Automaton(val startState: State, val finalStates: Set[State], val transitions: Set[((State, Char), State)]) {
 
-  def this() = this(Set())
+  //  def this(startState: State, finalStates: Set[State], transitions: Map[(State, Char), State]) = this(Set(), startState, finalStates, transitions)
 
-  //add and remove states
-  def addState(state: State) = this.states += state
-  def removeState(state: State) = this.states -= state
-  def addStates(states: Set[State]) = this.states ++= states
-  def removeStates(states: Set[State]) = this.states --= states
+  val states = getReachableStates(this.startState)
+  val alphabet: Set[Char] = this.transitions.map(_._1._2).toSet - '\0'
 
-  def complement(): Automaton = new Automaton(this.getDFA.states.map((state: State) => state.complement))
+  def getStateCount(): Int = this.states.size
+  def getTransitionCount(): Int = this.transitions.size
+
+  def complement(): Automaton = if ( this.isDeterministic) new Automaton(this.startState, (this.states -- this.finalStates), this.transitions) else this.getDFA.complement
 
   //  def relativeComplement(alphabet: Set[Char]): Automaton = new Automaton(this.getRelativeDFA(alphabet).states.map((state: State) => state.complement))
-  //  def relativeComplement(automaton: Automaton): Automaton = this.complement.intersect(automaton)
+  //def relativeComplement(automaton: Automaton): Automaton = this.complement.intersect(automaton)
 
   def union(automaton: Automaton): Automaton = {
-    //new start state
-    val startState = new State()
-    startState.setInitial(true)
-
-    //combine states
-    val unionedStates = this.states union automaton.states
-
-    //create transition from new start to old starts
-    unionedStates.filter(_.isInitial).foreach((state: State) => {
-      state.setInitial(false)
-      startState.addTransition(new Transition(state))
-    })
-
-    new Automaton(unionedStates + startState)
+    val newStartState = new State()
+    new Automaton(newStartState, this.finalStates ++ automaton.finalStates, this.transitions ++ automaton.transitions + ((newStartState, '\0') -> this.startState) + ((newStartState, '\0') -> automaton.startState))
   }
-
-  def |(automaton: Automaton): Automaton = union(automaton)
-
-  def union(automata: Set[Automaton]): Automaton = {
-    (automata).reduceRight(_ | _) | this
-  }
+  def |(automaton: Automaton) = union(automaton)
+  def union(automata: Set[Automaton]): Automaton = (automata).reduceRight(_ | _) | this
 
   def repeat(): Automaton = {
-
-    //new start state
-    val startState = new State()
-    startState.setFinal(true)
-    startState.setInitial(true)
-
-    //transition old finals to old start
-    this.getFinalStates.foreach((state: State) => {
-      state.addTransition(new Transition(this.getInitialState))
-    })
-
-    //transition new start to old start
-    startState.addTransition(new Transition(this.getInitialState))
-    this.getInitialState.setInitial(false)
-
-    new Automaton(states + startState)
+    val newStartState = new State()
+    new Automaton(newStartState, this.finalStates + newStartState, this.transitions ++ (this.finalStates.map((_, '\0') -> this.startState)) + ((newStartState, '\0') -> this.startState))
   }
-
   def *() = repeat()
 
-  //needs more testing
   def intersect(automaton: Automaton): Automaton = {
-    val fullAlphabet = (this.getAlphabet union automaton.getAlphabet)
+    val fullAlphabet = (this.alphabet union automaton.alphabet)
     //De Morgan's Law
     ((this.getRelativeDFA(fullAlphabet).complement) | (automaton.getRelativeDFA(fullAlphabet).complement)).complement
   }
 
-  def concatenate(automaton: Automaton): Automaton = {
-
-    //transition final states of first to initial state of second
-    this.getFinalStates.foreach((state: State) => {
-      state.setFinal(false)
-      state.addTransition(new Transition(automaton.getInitialState))
-    })
-
-    //set intial of first not to be initial
-    automaton.getInitialState.setInitial(false)
-    new Automaton(this.states union automaton.states)
-  }
-
+  def concatenate(automaton: Automaton): Automaton = new Automaton(this.startState, automaton.finalStates, this.transitions ++ automaton.transitions ++ (this.finalStates.map((_, '\0') -> automaton.startState)))
   def +(automaton: Automaton) = concatenate(automaton)
 
-  def concatenate(automata: Set[Automaton]): Automaton = {
-    this + (automata).reduceRight(_ + _)
-  }
-
+  def concatenate(automata: Set[Automaton]): Automaton = this + (automata).reduceRight(_ + _)
   def ++(automata: Set[Automaton]): Automaton = this.concatenate(automata)
 
-  def minus(automaton: Automaton): Automaton = {
-    this.intersect(automaton.complement)
-  }
-
+  def minus(automaton: Automaton): Automaton = this.intersect(automaton.complement)
   def -(automaton: Automaton): Automaton = this.minus(automaton)
 
-  def optional(): Automaton = {
-    val newStart = new State
-    newStart.setInitial(true)
-    newStart.setFinal(true)
-
-    val newEnd = new State
-    newEnd.setInitial(true)
-    newEnd.setFinal(true)
-
-    val automaton = (new Automaton(Set(newStart)) + this + new Automaton(Set(newEnd)))
-    automaton.getInitialState.addTransition(new Transition(automaton.getFinalStates.head))
-    automaton
-  }
-
-  def ?(): Automaton = this.optional()
+  def optional(): Automaton = new Automaton(this.startState, this.finalStates + this.startState, this.transitions)
+  def ?() = this.optional()
 
   def print() = {
-    //print initial
-    //this.getInitialState.print()
-    //print others
-    //this.states.filterNot(_.isInitial).foreach(_.print())
-    this.states.foreach(_.print())
-  }
-
-  def getInitialState(): State = this.states.filter(_.isInitial).head
-  def getFinalStates(): Set[State] = this.states.filter(_.isFinal)
-  def getAlphabet(): Set[Char] = this.states.flatMap(_.getAlphabet)
-
-  def getStateCount(): Int = this.states.size
-  def getTransitionCount(): Int = this.states.flatMap(_.getTransitions).size
-
-  def getNextStates(states: Set[State], char: Char): Set[State] = {
-    states.flatMap(_.getNextStates(char))
-  }
-
-  def getNextStates(currentStates: Set[State]): Set[State] = {
-    val nextStates = currentStates.flatMap(_.getNextStates)
-    if (currentStates == (currentStates union nextStates)) {
-      currentStates
-    } else {
-      getNextStates(currentStates union nextStates)
-    }
-  }
-
-  def accepts(string: String): Boolean = {
-
-    def accepts_r(chars: List[Char], currentStates: Set[State]): Boolean = {
-      if (chars.size > 1) {
-        accepts_r(chars.tail, this.getNextStates(this.getNextStates(this.getNextStates(currentStates), chars.head)))
+    println("State " + this.startState.getId + (if (this.finalStates.contains(this.startState)) " [initial][final]:" else " [initial]:"))
+    this.transitions.filter(_._1._1 == this.startState).foreach(transition => {
+      if (transition._1._2 == '\0') {
+        println("	-> " + transition._2.getId)
       } else {
-        !this.getNextStates(this.getNextStates(this.getNextStates(currentStates), chars.head)).forall(!_.isFinal)
+        println("	" + transition._1._2 + "-> " + transition._2.getId)
       }
+    })
+    (this.states - this.startState).foreach(state => {
+      println("State " + state.getId + (if (this.finalStates.contains(state)) " [final]:" else " :"))
+      this.transitions.filter(_._1._1 == state).foreach(transition => {
+        if (transition._1._2 == '\0') {
+          println("	-> " + transition._2.getId)
+        } else {
+          println("	" + transition._1._2 + "-> " + transition._2.getId)
+        }
+      })
+    })
+  }
+
+  def transition(state: State, char: Char): Set[State] = this.transitions.filter(transition => transition._1._1 == state && transition._1._2 == char).map(_._2)
+  def transition(states: Set[State], char: Char): Set[State] = states.flatMap(this.transition(_, char))
+
+  def epsilonJump(state: State): Set[State] = this.transition(state, '\0') + state
+  def epsilonJump(states: Set[State]): Set[State] = this.transition(states, '\0') ++ states
+
+  def transitionAndEpsilonJump(state: State, char: Char): Set[State] = this.epsilonJump(this.transition(this.epsilonJump(state), char))
+  def transitionAndEpsilonJump(states: Set[State], char: Char): Set[State] = states.flatMap(this.transitionAndEpsilonJump(_, char))
+
+  def accepts(string: String): Boolean = accepts(string.toList)
+
+  def accepts(chars: List[Char]): Boolean = {
+    def accepts_r(chars: List[Char], currentStates: Set[State]): Boolean = {
+      if (chars.size == 1)
+        this.transitionAndEpsilonJump(currentStates, chars.head).intersect(this.finalStates).size > 0
+      else
+        accepts_r(chars.tail, this.transitionAndEpsilonJump(currentStates, chars.head))
     }
 
-    if (string.toList.size == 0) {
-      !this.getNextStates(Set(this.getInitialState)).forall(!_.isFinal)
-    } else if (string.toList.size > 1) {
-      accepts_r(string.toList.tail, this.getNextStates(this.getNextStates(Set(this.getInitialState())), string.toList.head))
-    } else {
-      !this.getNextStates(this.getNextStates(this.getNextStates(Set(this.getInitialState())), string.toList.head)).forall(!_.isFinal)
-    }
+    if (chars.size == 0)
+      this.epsilonJump(this.startState).intersect(this.finalStates).size > 0
+    else
+      accepts_r(chars, Set(this.startState))
   }
 
   def isDeterministic(): Boolean = {
-    val alphabetToMatch = this.getInitialState.getAlphabet
     //no state has epsilon jumps
-    states.forall(!_.hasEpsilonJumps) &&
+    this.transitions.forall(transition => !(transition._1._2 == '\0')) &&
       //every state has the same alphabet as the initial state
-      states.forall(_.getAlphabet == alphabetToMatch) &&
+      this.states.forall(state => this.transitions.filter(_._1._1 == state).map(_._1._2).toSet == this.alphabet) &&
       //each state has no more than one transition per character
-      states.forall((state: State) => state.getAlphabet.forall((letter: Char) => state.getTransitions.filter(_.char == letter).size == 1))
+      this.states.forall(state => this.alphabet.forall(letter => this.transitions.filter(transition => transition._1._1 == state && transition._1._2 == letter).size == 1))
   }
 
-  def removeUnreachableStates(): Automaton = {
-    new Automaton(this.states.filter((state: State) => {
-      state.isInitial || (this.getInitialState.hasPathTo(state))
-    }).map((state: State) => {
-      state.removeTransitions(state.getTransitions().filterNot(states contains _.end))
-      state
-    }))
-  }
-
-  def removeDeadStates(): Automaton = {
-    val newStates = this.states.filter((state: State) => { state.isFinal || !this.getFinalStates.forall(!state.hasPathTo(_)) })
-    newStates.foreach(state => state.removeTransitions(state.getTransitions.filter(transition => !newStates.contains(transition.end))))
-    if (newStates.size == 0)
-      BasicAutomaton.emptyAutomaton()
-    else
-      new Automaton(newStates)
-  }
-
-  //bug with method:
-  //(a union Set(b,c,d)).removeUnreachableStates.removeNondisinguishableStates.removeDeadStates.print
-  def removeNondistinguishableStates(): Automaton = {
-
-    def removeIndistiguishableStates_r(): Automaton = {
-      val originalStates = this.states
-      val statePairsToCheck: Set[List[State]] = (this.states.toList.map(_ => this.states.toList)).flatten.combinations(2).toSet.filter((set: List[State]) => { set(0) != set(1) && ((set(0).isFinal && set(1).isFinal) || (!set(0).isFinal && !set(1).isFinal)) })
-
-      statePairsToCheck.filter((list: List[State]) => {
-        this.getAlphabet.forall((letter: Char) => {
-          this.getNextStates(Set(list(0)), letter) == this.getNextStates(Set(list(1)), letter)
-        })
-      }).foreach((pair: List[State]) => {
-        // mergedState.setInitial(pair(0).isInitial || pair(1).isInitial)
-
-        this.states.foreach((state: State) => {
-
-          state.getTransitions.foreach((transition: Transition) => {
-
-            if (pair(1) == transition.end) {
-              state.addTransition(new Transition(pair(0), transition.char))
-              state.removeTransition(transition)
-            }
-          })
-        })
-
-        pair(0).setInitial(pair(0).isInitial || pair(1).isInitial)
-
-        this.states -= pair(1)
-      })
-
-      if (states == originalStates) {
-        this
-      } else {
-        removeIndistiguishableStates_r()
-      }
-    }
-
-    if (!this.isDeterministic) {
-      this.getDFA.removeNondistinguishableStates
-    } else {
-      removeIndistiguishableStates_r
-    }
-  }
-
-  def getDFA(): Automaton = {
-
-    this.getRelativeDFA(this.getAlphabet)
-  }
+  //  bug with method:
+  //  (a union Set(b,c,d)).removeUnreachableStates.removeNondisinguishableStates.removeDeadStates.print
+//  def removeNondistinguishableStates(): Automaton = {
+//
+//  }
+  
+  def getDFA(): Automaton = this.getRelativeDFA(this.alphabet)
 
   def getRelativeDFA(alphabet: Set[Char]): Automaton = {
-
-    def getDFA_r(automaton: Automaton, alphabet: Set[Char]): Automaton = {
-      automaton.states.filter(_.getTransitions.size == 0).foreach(state => {
-        alphabet.foreach(letter => {
-          val nextStatesOnChar = this.getNextStates(this.getNextStates(this.getNextStates(state.associatedStates), letter))
-          if (automaton.states.filter(_.associatedStates == nextStatesOnChar).size > 0) {
-            state.addTransition(new Transition(automaton.states.filter(_.associatedStates == nextStatesOnChar).head, letter))
-          } else {
-            val newState = new State(nextStatesOnChar)
-            newState.setFinal(nextStatesOnChar.filter(_.isFinal).size > 0)
-            state.addTransition(new Transition(newState, letter))
-            automaton.addState(newState)
-          }
-        })
-      })
-
-      if (automaton.states.forall(_.getTransitions.size == alphabet.size)) {
+    def getRelativeDFA_r(automaton: Automaton): Automaton = {
+      if (automaton.states.forall(state => automaton.transitions.filter(_._1._1 == state).size > 0)) {
         automaton
       } else {
-        getDFA_r(automaton, alphabet)
+        val statesToExplore: Set[State] = automaton.states.filter(state => automaton.transitions.filter(transition => transition._1._1 == state).size == 0)
+        val transitionsToCheck: Set[((State, Char), Set[State])] = statesToExplore.flatMap(state => {
+          alphabet.map(letter => {
+            ((state, letter), this.transitionAndEpsilonJump(state.associatedStates, letter))
+          })
+        })
+        val statesToAdd: Set[State] = transitionsToCheck.filter(transition => {
+          !automaton.states.map(_.associatedStates).contains(transition._2)
+        }).map(transition => new State(transition._2))
+        val transitionsToAdd: Set[((State, Char), State)] = transitionsToCheck.map(transition => {
+          ((transition._1._1, transition._1._2), (automaton.states ++ statesToAdd).filter(_.associatedStates == transition._2).head)
+        })
+        getRelativeDFA_r(new Automaton(automaton.startState, (automaton.states ++ statesToAdd).filter(_.associatedStates.intersect(this.finalStates).size > 0), automaton.transitions ++ transitionsToAdd))
       }
     }
 
-    val associatedStates = this.getNextStates(Set(this.getInitialState))
-    val newStartState = new State(associatedStates)
-
-    newStartState.setInitial(true)
-    newStartState.setFinal(!associatedStates.forall(!_.isFinal))
-    getDFA_r(new Automaton(Set(newStartState)), alphabet)
+    val newStart = new State(this.epsilonJump(this.startState))
+    getRelativeDFA_r(new Automaton(newStart, if (this.finalStates.intersect(newStart.associatedStates).size > 0) Set(newStart) else Set(), Set()))
   }
 
-  def minimize(): Automaton = {
-    this.removeUnreachableStates.removeNondistinguishableStates.removeDeadStates
-  }
-
-  def isFinite(): Boolean = {
-    this.minimize.states.forall(state => !state.hasPathTo(state))
-  }
-
-  def isEmpty(): Boolean = {
-    this.removeUnreachableStates.states.filter(_.isFinal).size == 0
-  }
-
-  def isTotal(): Boolean = {
-    this.complement.isEmpty
-  }
+  //  def isFinite(): Boolean = this.minimize.states.forall(state => !pathExists(state, state))
+  def isFinite(): Boolean = this.states.forall(state => !pathExists(state, state))
+  def isEmpty(): Boolean = this.finalStates.size == 0
+  def isTotal(): Boolean = this.complement.isEmpty
 
   def equals(automaton: Automaton): Boolean = {
     ((this intersect (automaton.complement)) union ((this.complement) intersect automaton)).isEmpty
   }
-
   def ==(automaton: Automaton): Boolean = this.equals(automaton)
 
   def isSubsetOf(automaton: Automaton): Boolean = {
     (this intersect automaton) == this
   }
 
-  def substitute(oldChar: Char, newChar: Char): Automaton = {
-    this.states.foreach(state => {
-      state.getTransitions.filter(_.char == oldChar).foreach(transition => {
-        state.addTransition(new Transition(transition.end, newChar))
-        state.removeTransition(transition)
-      })
-    })
-    this
-  }
+  def substitute(oldChar: Char, newChar: Char): Automaton = new Automaton(this.startState, this.finalStates, this.transitions.map(transition => if (transition._1._2 == oldChar) ((transition._1._1, newChar) -> transition._2) else transition))
 
-  //  def toRegex(): String = {
-  //
-  //    val newStart = new State
-  //    newStart.setInitial(true)
-  //    newStart.setFinal(true)
-  //
-  //    val newEnd = new State
-  //    newEnd.setInitial(true)
-  //    newEnd.setFinal(true)
-  //
-  //    val automaton = (new Automaton(Set(newStart)) + this + new Automaton(Set(newEnd))).minimize
-  //
-  //    automaton.toRegex_r
-  //  }
-  //
-  //  def toRegex_r(): String = {
-  //
-  //    states.foreach(state => {
-  //      states.foreach(stateToMatch => {
-  //        if (state.getTransitions.filter(_.end == stateToMatch).size > 1) {
-  //          val transitionsToRemove = state.getTransitions.filter(_.end == stateToMatch)
-  //          println(transitionsToRemove.reduceRight(_ | _).getLabel)
-  //          state.removeTransitions(transitionsToRemove)
-  //        }
-  //      })
-  //    })
-  //
-  //    new String
-  //  }
+  def pathExists(stateFrom: State, stateTo: State): Boolean = this.getReachableStates(stateFrom).contains(stateTo)
+
+  def getConnectedStates(state: State): Set[State] = this.transitions.filter(_._1._1 == state).map(_._2).toSet
+  def getConnectedStates(states: Set[State]): Set[State] = states.flatMap(this.getConnectedStates(_))
+
+  def getReachableStates(state: State): Set[State] = getReachableStates(Set(state))
+  def getReachableStates(states: Set[State]): Set[State] = {
+    val allStates = states.union(this.getConnectedStates(states))
+    if (allStates.subsetOf(states))
+      states
+    else
+      getReachableStates(allStates)
+  }
 }

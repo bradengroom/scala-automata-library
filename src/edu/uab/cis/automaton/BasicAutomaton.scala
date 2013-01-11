@@ -4,12 +4,8 @@ object BasicAutomaton {
 
   def basicAutomaton(char: Char): Automaton = {
     val state1 = new State()
-    state1.setInitial(true)
     val state2 = new State()
-    state2.setFinal(true)
-    val transition = new Transition(state2, char)
-    state1.addTransition(transition)
-    new Automaton(Set(state1, state2))
+    new Automaton(state1, Set(state2), Set(((state1, char),state2)))
   }
 
   def range(begin: Char, end: Char): Automaton = {
@@ -21,11 +17,7 @@ object BasicAutomaton {
       basicAutomaton(begin) union range((begin + 1).toChar, end)
   }
 
-  def emptyAutomaton(): Automaton = {
-    val state = new State()
-    state.setInitial(true)
-    new Automaton(Set(state))
-  }
+  def emptyAutomaton(): Automaton = new Automaton(new State(),Set(),Set())
 
   def a(): Automaton = basicAutomaton('a')
   def b(): Automaton = basicAutomaton('b')

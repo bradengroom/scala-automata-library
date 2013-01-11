@@ -4,9 +4,8 @@ object Main {
 
   def main(args: Array[String]) = {
     
-	  BasicAutomaton.range('b','a').minimize.print
-    
-    //println((a union Set(b,c,d)).accepts("b"))
+	  ((b*).intersect(b)).print
+	  
     
     //        println(((a)).isFinite)
     //a.minimize.print
@@ -140,12 +139,8 @@ object Main {
 
   def basicAutomaton(char: Char): Automaton = {
     val state1 = new State()
-    state1.setInitial(true)
     val state2 = new State()
-    state2.setFinal(true)
-    val transition = new Transition(state2, char)
-    state1.addTransition(transition)
-    new Automaton(Set(state1, state2))
+    new Automaton(state1, Set(state2), Set(((state1, char),state2)))
   }
 
   def a(): Automaton = basicAutomaton('a')
