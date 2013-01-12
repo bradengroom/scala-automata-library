@@ -3,144 +3,15 @@ import edu.uab.cis.automaton._
 object Main {
 
   def main(args: Array[String]) = {
-    
-	  ((b*).intersect(b)).print
-	  
-    
-    //        println(((a)).isFinite)
-    //a.minimize.print
-    //println(a accepts "aa")
 
-//    val state1 = new State()
-//    state1.setInitial(true)
-//    val state2 = new State()
-//    state2.setFinal(true)
-//    val transition = new Transition(state2, 'a')
-//    state1.addTransition(transition)
-//    val auto = new Automaton(Set(state1, state2))
-//
-//    println(a accepts "")
-    
-    
-    //    (((a)|(b))).print
-    //    println("****************")
-    //    (((a)|(b))).getDFA.states.foreach(state => {println(state.getId); state.associatedStates.foreach(aState => println("   " + aState.getId))})
+    BasicAutomaton.total(Set('a', 'b', 'c')).print
 
-    //    	  println(((((a+b)*)|((c+d)*))+(((e+f)*)|((g+h)*))).states.size)
-    //    	  println("****************")
-//        	  println(((c+d)*)+((a+b)*) accepts "ab")
-//        	  println("****************")
-
-    //    val intersectTest1 = new Automaton
-    //    val intersectTest2 = new Automaton
-    //
-    //    val state1 = new State()
-    //    	state1.setInitial(true)
-    //    val state2 = new State()
-    //    	state2.setFinal(true)
-    //    val state3 = new State()
-    //    
-    //    state1.addTransition(new Transition(state2, '0'))
-    //    state1.addTransition(new Transition(state3, '1'))
-    //    state2.addTransition(new Transition(state2, '0'))
-    //    state2.addTransition(new Transition(state2, '1'))
-    //    state3.addTransition(new Transition(state3, '0'))
-    //    state3.addTransition(new Transition(state3, '1'))
-    //    
-    //    intersectTest1.addState(state1)
-    //    intersectTest1.addState(state2)
-    //    intersectTest1.addState(state3)
-    //    
-    //    val state4 = new State()
-    //    	state4.setInitial(true)
-    //    val state5 = new State()
-    //    	state5.setFinal(true)
-    //    	
-    //    state4.addTransition(new Transition(state5, '0'))
-    //    state4.addTransition(new Transition(state4, '1'))
-    //    state5.addTransition(new Transition(state5, '0'))
-    //    state5.addTransition(new Transition(state4, '1'))
-    //    
-    //    intersectTest2.addState(state4)
-    //    intersectTest2.addState(state5)
-    //    
-    //    //intersectTest1.print
-    //    println("**********************")
-    //    //intersectTest2.print
-    //    println("**********************")
-    //    (intersectTest1 intersect intersectTest2).print
-
-    //	  println((a|b) accepts "a")
-    //	  println(((a+c)*) accepts "acacacacacacb")
-    //	  
-    //	  a.getNextStates(Set(a.getInitialState)).foreach(_.print)
-
-    //	  val b = new Automaton()
-    //	  
-    //	  val state1 = new State()
-    //	  	state1.setInitial(true)
-    //	  val state2 = new State()
-    //	  	state2.setFinal(true)
-    //	  val state3 = new State()
-    //	  	state3.setFinal(true)
-    //	  val state4 = new State()	  	
-    //	  val state5 = new State()
-    //	  val state6 = new State()
-    //	    state6.setFinal(true)
-    //	  val state7 = new State()
-    //	    
-    //	  state1.addTransition(new Transition(state3,'b'))
-    //	  state1.addTransition(new Transition(state2,'a'))
-    //	  
-    //	  state2.addTransition(new Transition(state4,'a'))
-    //	  state2.addTransition(new Transition(state5,'b'))
-    //	  
-    //	  state3.addTransition(new Transition(state5,'a'))
-    //	  state3.addTransition(new Transition(state4,'b'))
-    //	  
-    //	  state4.addTransition(new Transition(state6,'a'))
-    //	  state4.addTransition(new Transition(state6,'b'))
-    //	  
-    //	  state5.addTransition(new Transition(state6,'a'))
-    //	  state5.addTransition(new Transition(state6,'b'))
-    //	  
-    //	  state6.addTransition(new Transition(state6,'a'))
-    //	  state6.addTransition(new Transition(state6,'b'))
-    //	  state6.addTransition(new Transition(state7,'c'))
-    //	  
-    //	  
-    //	  b.addState(state1)
-    //	  b.addState(state2)
-    //	  b.addState(state3)
-    //	  b.addState(state4)
-    //	  b.addState(state5)
-    //	  b.addState(state6)
-    //	  b.addState(state7)
-    //	  
-    //	  b.print
-    //	  println("**********************")
-    //	  b.removeDeadStates.print
-    ////	  println("**********************")
-    ////	  b.getDFA.print
-
-    //    val a = new Automaton()
-    //    val state1 = new State()
-    //    state1.setInitial(true)
-    //    val state2 = new State()
-    //    val state3 = new State()
-    //    state1.addTransition(new Transition(state2, 'a'))
-    //    state2.addTransition(new Transition(state3, 'b'))
-    //    a.addState(state1)
-    //    a.addState(state2)
-    //    a.addState(state3)
-    //    
-    //    println(a.isEmpty)
   }
 
   def basicAutomaton(char: Char): Automaton = {
     val state1 = new State()
     val state2 = new State()
-    new Automaton(state1, Set(state2), Set(((state1, char),state2)))
+    new Automaton(state1, Set(state2), Set(((state1, char), state2)))
   }
 
   def a(): Automaton = basicAutomaton('a')

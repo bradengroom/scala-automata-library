@@ -2,18 +2,16 @@ package edu.uab.cis.automaton;
 
 class Automaton(val startState: State, val finalStates: Set[State], val transitions: Set[((State, Char), State)]) {
 
-  //  def this(startState: State, finalStates: Set[State], transitions: Map[(State, Char), State]) = this(Set(), startState, finalStates, transitions)
-
   val states = getReachableStates(this.startState)
-  val alphabet: Set[Char] = this.transitions.map(_._1._2).toSet - '\0'
+  val alphabet = this.transitions.map(_._1._2).toSet - '\0'
 
-  def getStateCount(): Int = this.states.size
-  def getTransitionCount(): Int = this.transitions.size
+  def getStateCount() = this.states.size
+  def getTransitionCount() = this.transitions.size
 
-  def complement(): Automaton = if ( this.isDeterministic) new Automaton(this.startState, (this.states -- this.finalStates), this.transitions) else this.getDFA.complement
+  def complement(): Automaton = if (this.isDeterministic) new Automaton(this.startState, (this.states -- this.finalStates), this.transitions) else this.getDFA.complement
 
-  //  def relativeComplement(alphabet: Set[Char]): Automaton = new Automaton(this.getRelativeDFA(alphabet).states.map((state: State) => state.complement))
-  //def relativeComplement(automaton: Automaton): Automaton = this.complement.intersect(automaton)
+  def relativeComplement(alphabet: Set[Char]): Automaton = this.getRelativeDFA(alphabet).complement
+  def relativeComplement(automaton: Automaton): Automaton = this.relativeComplement(this.alphabet | automaton.alphabet).intersect(automaton)
 
   def union(automaton: Automaton): Automaton = {
     val newStartState = new State()
@@ -34,10 +32,13 @@ class Automaton(val startState: State, val finalStates: Set[State], val transiti
     ((this.getRelativeDFA(fullAlphabet).complement) | (automaton.getRelativeDFA(fullAlphabet).complement)).complement
   }
 
-  def concatenate(automaton: Automaton): Automaton = new Automaton(this.startState, automaton.finalStates, this.transitions ++ automaton.transitions ++ (this.finalStates.map((_, '\0') -> automaton.startState)))
+  def concatenate(automaton: Automaton): Automaton = {
+    val automatonClone = automaton.clone
+    new Automaton(this.startState, automatonClone.finalStates, this.transitions ++ automatonClone.transitions ++ (this.finalStates.map((_, '\0') -> automatonClone.startState)))
+  }
   def +(automaton: Automaton) = concatenate(automaton)
 
-  def concatenate(automata: Set[Automaton]): Automaton = this + (automata).reduceRight(_ + _)
+  def concatenate(automata: Set[Automaton]): Automaton = this + (automata.reduceRight(_ + _))
   def ++(automata: Set[Automaton]): Automaton = this.concatenate(automata)
 
   def minus(automaton: Automaton): Automaton = this.intersect(automaton.complement)
@@ -103,10 +104,10 @@ class Automaton(val startState: State, val finalStates: Set[State], val transiti
 
   //  bug with method:
   //  (a union Set(b,c,d)).removeUnreachableStates.removeNondisinguishableStates.removeDeadStates.print
-//  def removeNondistinguishableStates(): Automaton = {
-//
-//  }
-  
+  //  def removeNondistinguishableStates(): Automaton = {
+  //
+  //  }
+
   def getDFA(): Automaton = this.getRelativeDFA(this.alphabet)
 
   def getRelativeDFA(alphabet: Set[Char]): Automaton = {
@@ -144,9 +145,7 @@ class Automaton(val startState: State, val finalStates: Set[State], val transiti
   }
   def ==(automaton: Automaton): Boolean = this.equals(automaton)
 
-  def isSubsetOf(automaton: Automaton): Boolean = {
-    (this intersect automaton) == this
-  }
+  def isSubsetOf(automaton: Automaton): Boolean = (this intersect automaton) == this
 
   def substitute(oldChar: Char, newChar: Char): Automaton = new Automaton(this.startState, this.finalStates, this.transitions.map(transition => if (transition._1._2 == oldChar) ((transition._1._1, newChar) -> transition._2) else transition))
 
@@ -162,5 +161,26 @@ class Automaton(val startState: State, val finalStates: Set[State], val transiti
       states
     else
       getReachableStates(allStates)
+  }
+
+  def repeat(min: Int): Automaton = {
+    if (min < 1)
+      this*
+    else
+      this + repeat(min - 1)
+  }
+
+  def repeat(min: Int, max: Int): Automaton = {
+    if (min > max)
+      BasicAutomaton.empty
+    else
+      this.repeat(min) intersect this.repeat(max + 1).complement
+  }
+
+  override def clone(): Automaton = {
+    val newStates = this.states.map(state => new State(Set(state)))
+    val newFinalStates = newStates.filter(state => this.finalStates.contains(state.associatedStates.head))
+    val newTransitions = this.transitions.map(transition => ((newStates.filter(state => state.associatedStates == Set(transition._1._1)).head, transition._1._2), newStates.filter(state => state.associatedStates == Set(transition._2)).head))
+    new Automaton(newStates.filter(state => state.associatedStates.head == this.startState).head, newFinalStates, newTransitions)
   }
 }
