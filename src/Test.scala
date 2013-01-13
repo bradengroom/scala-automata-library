@@ -4,7 +4,7 @@ object Test {
 
   def main(args: Array[String]) = {
 
-    ((a*)&(b*)).print
+    ((b*)-b).print
   }
 
   def basicAutomaton(char: Char): Automaton = {
