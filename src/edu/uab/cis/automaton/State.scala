@@ -1,11 +1,10 @@
 package edu.uab.cis.automaton;
-
-private object State {
+private object State{
     private var currentId = 0
     private def getNextId = {currentId += 1; currentId}
 }
 
-class State(val associatedStates: Set[State]) {
+@serializable class State(val associatedStates: Set[State]) {
   
   def this() = this(null)
   

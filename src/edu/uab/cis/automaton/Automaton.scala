@@ -1,6 +1,8 @@
 package edu.uab.cis.automaton;
 
-class Automaton(val startState: State, val finalStates: Set[State], val transitions: Set[((State, Char), State)]) {
+import java.io._;
+
+@serializable class Automaton(val startState: State, val finalStates: Set[State], val transitions: Set[((State, Char), State)]) {
 
   //set of states and characters for this automaton
   val states = getReachableStates(this.startState)
@@ -456,5 +458,65 @@ class Automaton(val startState: State, val finalStates: Set[State], val transiti
         }
       })
     })
+  }
+
+  /**
+   * @return Returns the automaton as a byte array
+   */
+  def toByteArray(): Array[Byte] = {
+    val baos = new ByteArrayOutputStream()
+    val oos = new ObjectOutputStream(baos)
+    oos.writeObject(this)
+    val byteArray = baos.toByteArray
+    oos.close()
+    baos.close()
+    byteArray
+  }
+
+  /**
+   * @param file
+   */
+  def save(file: File) = {
+    val fos = new FileOutputStream(file)
+    fos.write(this.toByteArray)
+    fos.close()
+  }
+
+  /**
+   * @param filePath
+   */
+  def save(filePath: String) = {
+    val fos = new FileOutputStream(filePath)
+    fos.write(this.toByteArray)
+    fos.close()
+  }
+}
+
+object Automaton {
+
+  /**
+   * @param filePath
+   * @return Loads the automaton saved in the given file path and returns it
+   */
+  def load(filePath: String): Automaton = {
+    val bais = new FileInputStream(filePath)
+    val is = new ObjectInputStream(bais)
+    val automaton = is.readObject().asInstanceOf[Automaton]
+    bais.close()
+    is.close()
+    automaton
+  }
+
+  /**
+   * @param file
+   * @return Loads the automaton saved in the given file and returns it
+   */
+  def load(file: File): Automaton = {
+    val bais = new FileInputStream(file)
+    val is = new ObjectInputStream(bais)
+    val automaton = is.readObject().asInstanceOf[Automaton]
+    bais.close()
+    is.close()
+    automaton
   }
 }
