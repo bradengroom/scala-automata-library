@@ -4,7 +4,7 @@ object Test {
 
   def main(args: Array[String]) = {
 
-    ((b*)-b).print
+    println((a+b).reverse accepts "ba")
   }
 
   def basicAutomaton(char: Char): Automaton = {

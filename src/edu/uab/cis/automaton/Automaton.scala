@@ -74,6 +74,15 @@ class Automaton(val startState: State, val finalStates: Set[State], val transiti
   def *() = repeat()
 
   /**
+   * @return Returns an automaton that accepts the reversal of the automatons language
+   */
+  def reverse(): Automaton = {
+    val newStart = new State()
+    val newTransitions = this.transitions.map(transition => ((transition._2, transition._1._2), transition._1._1)) ++ this.finalStates.map(state => ((newStart, '\0'), state))
+    new Automaton(newStart, Set(this.startState), newTransitions)
+  }
+
+  /**
    * @param automaton
    * @return Returns an automaton that accepts the intersection of the languages of the given automata
    */
@@ -86,8 +95,8 @@ class Automaton(val startState: State, val finalStates: Set[State], val transiti
         //we need to get transitions for states that do not have transitions yet
         val statesToExplore: Set[State] = intersection.states.filter(state => intersection.transitions.filter(transition => transition._1._1 == state).size == 0)
         val transitionsToCheck: Set[((State, Char), Set[State])] = statesToExplore.flatMap(state => {
-          (this.alphabet|automaton.alphabet).map(letter => {
-            ((state, letter), this.transitionAndEpsilonJump(state.associatedStates, letter)|automaton.transitionAndEpsilonJump(state.associatedStates, letter))
+          (this.alphabet | automaton.alphabet).map(letter => {
+            ((state, letter), this.transitionAndEpsilonJump(state.associatedStates, letter) | automaton.transitionAndEpsilonJump(state.associatedStates, letter))
           })
         })
         val statesToAdd: Set[State] = transitionsToCheck.filter(transition => {
@@ -101,7 +110,7 @@ class Automaton(val startState: State, val finalStates: Set[State], val transiti
     }
 
     //our new start state will be a state associated with our current start states and states reachable by epsilon jump
-    val newStart = new State(this.epsilonJump(this.startState)|automaton.epsilonJump(automaton.startState))
+    val newStart = new State(this.epsilonJump(this.startState) | automaton.epsilonJump(automaton.startState))
     intersect_r(new Automaton(newStart, if (this.finalStates.intersect(newStart.associatedStates).size > 0 && automaton.finalStates.intersect(newStart.associatedStates).size > 0) Set(newStart) else Set(), Set()))
   }
 
@@ -143,7 +152,7 @@ class Automaton(val startState: State, val finalStates: Set[State], val transiti
    * @param automaton
    * @return Returns an automaton that accepts the subtraction of the languages of the given automata
    */
-    def minus(automaton: Automaton): Automaton = {
+  def minus(automaton: Automaton): Automaton = {
     def minus_r(intersection: Automaton): Automaton = {
       //if we have all need transitions
       if (intersection.states.forall(state => intersection.transitions.filter(_._1._1 == state).size > 0)) {
@@ -152,8 +161,8 @@ class Automaton(val startState: State, val finalStates: Set[State], val transiti
         //we need to get transitions for states that do not have transitions yet
         val statesToExplore: Set[State] = intersection.states.filter(state => intersection.transitions.filter(transition => transition._1._1 == state).size == 0)
         val transitionsToCheck: Set[((State, Char), Set[State])] = statesToExplore.flatMap(state => {
-          (this.alphabet|automaton.alphabet).map(letter => {
-            ((state, letter), this.transitionAndEpsilonJump(state.associatedStates, letter)|automaton.transitionAndEpsilonJump(state.associatedStates, letter))
+          (this.alphabet | automaton.alphabet).map(letter => {
+            ((state, letter), this.transitionAndEpsilonJump(state.associatedStates, letter) | automaton.transitionAndEpsilonJump(state.associatedStates, letter))
           })
         })
         val statesToAdd: Set[State] = transitionsToCheck.filter(transition => {
@@ -167,7 +176,7 @@ class Automaton(val startState: State, val finalStates: Set[State], val transiti
     }
 
     //our new start state will be a state associated with our current start states and states reachable by epsilon jump
-    val newStart = new State(this.epsilonJump(this.startState)|automaton.epsilonJump(automaton.startState))
+    val newStart = new State(this.epsilonJump(this.startState) | automaton.epsilonJump(automaton.startState))
     minus_r(new Automaton(newStart, if (this.finalStates.intersect(newStart.associatedStates).size > 0 && automaton.finalStates.intersect(newStart.associatedStates).size == 0) Set(newStart) else Set(), Set()))
   }
 
