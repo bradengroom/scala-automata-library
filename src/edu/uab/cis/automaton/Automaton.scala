@@ -157,13 +157,19 @@ class Automaton(val startState: State, val finalStates: Set[State], val transiti
    * @param state
    * @return Returns the resulting set of states after making all possible epsilon jumps from the given state
    */
-  def epsilonJump(state: State): Set[State] = this.transition(state, '\0') + state
+  def epsilonJump(state: State): Set[State] = this.epsilonJump(Set(state))
 
   /**
    * @param states
    * @return Returns the resulting set of states after making all possible epsilon jumps from the given set of states
    */
-  def epsilonJump(states: Set[State]): Set[State] = this.transition(states, '\0') ++ states
+  def epsilonJump(states: Set[State]): Set[State] = {
+    val nextStates = this.transition(states, '\0')
+    if ((states union nextStates) == states)
+      states
+    else
+      this.epsilonJump(states union nextStates)
+  }
 
   /**
    * @param state
@@ -247,7 +253,7 @@ class Automaton(val startState: State, val finalStates: Set[State], val transiti
         getRelativeDFA_r(new Automaton(automaton.startState, (automaton.states ++ statesToAdd).filter(_.associatedStates.intersect(this.finalStates).size > 0), automaton.transitions ++ transitionsToAdd))
       }
     }
-    
+
     //our new start state will be a state associated with our current start state and states reachable by epsilon jump
     val newStart = new State(this.epsilonJump(this.startState))
     getRelativeDFA_r(new Automaton(newStart, if (this.finalStates.intersect(newStart.associatedStates).size > 0) Set(newStart) else Set(), Set()))
