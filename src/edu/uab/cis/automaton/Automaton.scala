@@ -109,13 +109,13 @@ class Automaton(val startState: State, val finalStates: Set[State], val transiti
    * @param automata
    * @return Returns an automaton that accepts the concatenation of the languages of the given automata
    */
-  def concatenate(automata: Set[Automaton]): Automaton = this + (automata.reduceRight(_ + _))
+  def concatenate(automata: List[Automaton]): Automaton = this + (automata.reduceRight(_ + _))
 
   /**
    * @param automata
    * @return Returns an automaton that accepts the concatenation of the languages of the given automata
    */
-  def ++(automata: Set[Automaton]): Automaton = this.concatenate(automata)
+  def ++(automata: List[Automaton]): Automaton = this.concatenate(automata)
 
   /**
    * @param automaton

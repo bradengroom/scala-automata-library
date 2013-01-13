@@ -4,8 +4,8 @@ object Test {
 
   def main(args: Array[String]) = {
 
-    BasicAutomaton.total(Set('a', 'b', 'c')).print
-
+    val a = x
+    (a ++ List(a, a, a, a)).print
   }
 
   def basicAutomaton(char: Char): Automaton = {
