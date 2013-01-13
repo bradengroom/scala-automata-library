@@ -5,6 +5,7 @@ object Test {
   def main(args: Array[String]) = {
 
     val abab = BasicAutomaton.string("aa").substitute('a', "ab")
+    abab.print
     println(abab.accepts("abab"))
   }
 

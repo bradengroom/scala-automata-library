@@ -368,13 +368,20 @@ import java.io._;
   /**
    * @param oldLetter
    * @param string
-   * @return Returns the automaton with transitions on oldLetter with transitions on string
+   * @return Returns the automaton with transitions on oldLetter replaced with transitions on string
    */
-  def substitute(oldLetter: Char, string: String): Automaton = {
+  def substitute(oldLetter: Char, string: String): Automaton = this.substitute(oldLetter, BasicAutomaton.string(string))
+
+  /**
+   * @param oldLetter
+   * @param automaton
+   * @return Returns the automaton with transitions on oldLetter with transitions the automaton given
+   */
+  def substitute(oldLetter: Char, automaton: Automaton): Automaton = {
     val transitionsToChange = this.transitions.filter(transition => transition._1._2 == oldLetter)
     val newTransitions: Set[((State, Char), State)] = transitionsToChange.flatMap(transition => {
-      val stringAutomaton = BasicAutomaton.string(string)
-      stringAutomaton.transitions ++ stringAutomaton.finalStates.map(finalState => ((finalState, '\0'), transition._2)) + Set(stringAutomaton.startState).map(start => ((transition._1._1, '\0'), stringAutomaton.startState)).head
+      val automatonClone = automaton.clone
+      automatonClone.transitions ++ automatonClone.finalStates.map(finalState => ((finalState, '\0'), transition._2)) + Set(automatonClone.startState).map(start => ((transition._1._1, '\0'), automatonClone.startState)).head
     })
     new Automaton(this.startState, this.finalStates, (this.transitions -- transitionsToChange) ++ newTransitions)
   }
