@@ -321,7 +321,7 @@ import java.io._;
   /**
    * @return Returns true if the language of the automaton is finite
    */
-  def isFinite(): Boolean = this.states.forall(state => !pathExists(state, state))
+  def isFinite(): Boolean = this.finalStates.forall(state => !pathExists(state, state))
 
   /**
    * @return Returns true if the automaton does not accept anything

@@ -1,14 +1,10 @@
 import edu.uab.cis.automaton._
 
-import java.io.ByteArrayOutputStream;
-import java.io.ObjectOutputStream;
-
 object Test {
 
   def main(args: Array[String]) = {
 
-    (a+b).save("automaton.nfa")
-    Automaton.load("automaton.nfa").print
+    
   }
 
   def basicAutomaton(char: Char): Automaton = {
