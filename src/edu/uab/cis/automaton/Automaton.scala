@@ -366,6 +366,20 @@ import java.io._;
   def substitute(oldLetter: Char, newLetter: Char): Automaton = new Automaton(this.startState, this.finalStates, this.transitions.map(transition => if (transition._1._2 == oldLetter) ((transition._1._1, newLetter) -> transition._2) else transition))
 
   /**
+   * @param oldLetter
+   * @param string
+   * @return Returns the automaton with transitions on oldLetter with transitions on string
+   */
+  def substitute(oldLetter: Char, string: String): Automaton = {
+    val transitionsToChange = this.transitions.filter(transition => transition._1._2 == oldLetter)
+    val newTransitions: Set[((State, Char), State)] = transitionsToChange.flatMap(transition => {
+      val stringAutomaton = BasicAutomaton.string(string)
+      stringAutomaton.transitions ++ stringAutomaton.finalStates.map(finalState => ((finalState, '\0'), transition._2)) + Set(stringAutomaton.startState).map(start => ((transition._1._1, '\0'), stringAutomaton.startState)).head
+    })
+    new Automaton(this.startState, this.finalStates, (this.transitions -- transitionsToChange) ++ newTransitions)
+  }
+
+  /**
    * @param stateFrom
    * @param stateTo
    * @return Returns true if there is a path from stateFrom to stateTo
