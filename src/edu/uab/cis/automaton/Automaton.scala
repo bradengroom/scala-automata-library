@@ -326,7 +326,7 @@ import java.io._;
   /**
    * @return Returns true if the automaton does not accept anything
    */
-  def isEmpty(): Boolean = this.finalStates.size == 0
+  def isEmpty(): Boolean = this.finalStates.forall(!this.pathExists(this.startState, _))
 
   /**
    * @return Returns true if the automaton accepts all strings
@@ -342,9 +342,7 @@ import java.io._;
    * @param automaton
    * @return Returns true if the given automata accept the same language
    */
-  def equals(automaton: Automaton): Boolean = {
-    ((this intersect (automaton.relativeComplement(this))) union ((this.relativeComplement(automaton)) intersect automaton)).isEmpty
-  }
+  def equals(automaton: Automaton): Boolean = (this - automaton).isEmpty && (automaton - this).isEmpty
 
   /**
    * @param automaton
