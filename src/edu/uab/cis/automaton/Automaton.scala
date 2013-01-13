@@ -78,9 +78,31 @@ class Automaton(val startState: State, val finalStates: Set[State], val transiti
    * @return Returns an automaton that accepts the intersection of the languages of the given automata
    */
   def intersect(automaton: Automaton): Automaton = {
-    val fullAlphabet = (this.alphabet union automaton.alphabet)
-    //De Morgan's Law
-    ((this.getRelativeDFA(fullAlphabet).complement) | (automaton.getRelativeDFA(fullAlphabet).complement)).complement
+    def intersect_r(intersection: Automaton): Automaton = {
+      //if we have all need transitions
+      if (intersection.states.forall(state => intersection.transitions.filter(_._1._1 == state).size > 0)) {
+        intersection
+      } else {
+        //we need to get transitions for states that do not have transitions yet
+        val statesToExplore: Set[State] = intersection.states.filter(state => intersection.transitions.filter(transition => transition._1._1 == state).size == 0)
+        val transitionsToCheck: Set[((State, Char), Set[State])] = statesToExplore.flatMap(state => {
+          (this.alphabet|automaton.alphabet).map(letter => {
+            ((state, letter), this.transitionAndEpsilonJump(state.associatedStates, letter)|automaton.transitionAndEpsilonJump(state.associatedStates, letter))
+          })
+        })
+        val statesToAdd: Set[State] = transitionsToCheck.filter(transition => {
+          !intersection.states.map(_.associatedStates).contains(transition._2)
+        }).map(transition => new State(transition._2))
+        val transitionsToAdd: Set[((State, Char), State)] = transitionsToCheck.map(transition => {
+          ((transition._1._1, transition._1._2), (intersection.states ++ statesToAdd).filter(_.associatedStates == transition._2).head)
+        })
+        intersect_r(new Automaton(intersection.startState, (intersection.states ++ statesToAdd).filter(_.associatedStates.intersect(this.finalStates).size > 0) intersect (intersection.states ++ statesToAdd).filter(_.associatedStates.intersect(automaton.finalStates).size > 0), intersection.transitions ++ transitionsToAdd))
+      }
+    }
+
+    //our new start state will be a state associated with our current start state and states reachable by epsilon jump
+    val newStart = new State(this.epsilonJump(this.startState)|automaton.epsilonJump(automaton.startState))
+    intersect_r(new Automaton(newStart, if (this.finalStates.intersect(newStart.associatedStates).size > 0 && automaton.finalStates.intersect(newStart.associatedStates).size > 0) Set(newStart) else Set(), Set()))
   }
 
   /**
