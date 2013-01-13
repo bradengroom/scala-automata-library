@@ -275,6 +275,11 @@ class Automaton(val startState: State, val finalStates: Set[State], val transiti
   def isTotal(): Boolean = this.complement.isEmpty
 
   /**
+   * @return Returns true if the automaton only accepts the empty string
+   */
+  def isEmptyString(): Boolean = this == BasicAutomaton.emptyString
+
+  /**
    * @param automaton
    * @return Returns true if the given automata accept the same language
    */
