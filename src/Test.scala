@@ -4,8 +4,7 @@ object Test {
 
   def main(args: Array[String]) = {
 
-    val a = x
-    (a ++ List(a, a, a, a)).print
+    ((a*)&(b*)).print
   }
 
   def basicAutomaton(char: Char): Automaton = {

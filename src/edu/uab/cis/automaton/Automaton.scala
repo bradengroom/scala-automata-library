@@ -284,7 +284,7 @@ class Automaton(val startState: State, val finalStates: Set[State], val transiti
    * @return Returns true if the given automata accept the same language
    */
   def equals(automaton: Automaton): Boolean = {
-    ((this intersect (automaton.complement)) union ((this.complement) intersect automaton)).isEmpty
+    ((this intersect (automaton.relativeComplement(this))) union ((this.relativeComplement(automaton)) intersect automaton)).isEmpty
   }
 
   /**
