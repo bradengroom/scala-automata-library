@@ -4,7 +4,8 @@ private object State{
     private def getNextId = {currentId += 1; currentId}
 }
 
-@serializable class State(val associatedStates: Set[State]) {
+@serializable
+class State(val associatedStates: Set[State]) {
   
   def this() = this(null)
   

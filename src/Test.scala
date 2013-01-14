@@ -3,10 +3,7 @@ import edu.uab.cis.automaton._
 object Test {
 
   def main(args: Array[String]) = {
-
-    val abab = BasicAutomaton.string("aa").substitute('a', "ab")
-    abab.print
-    println(abab==abab)
+	  
   }
 
   def basicAutomaton(char: Char): Automaton = {

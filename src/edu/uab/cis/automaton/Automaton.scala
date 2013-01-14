@@ -2,11 +2,14 @@ package edu.uab.cis.automaton;
 
 import java.io._;
 
-@serializable class Automaton(val startState: State, val finalStates: Set[State], val transitions: Set[((State, Char), State)]) {
+@serializable
+class Automaton(val startState: State, val finalStates: Set[State], val transitions: Set[((State, Char), State)]) {
 
   //set of states and characters for this automaton
   val states = getReachableStates(this.startState)
   val alphabet = this.transitions.map(_._1._2).toSet - '\0'
+  val deadStates = ((states--finalStates)-startState).filter(state => this.finalStates.forall(finalState => !this.pathExists(state, finalState)))
+  val liveStates = this.states -- this.deadStates
 
   /**
    * @return Returns the number of states in this automaton
@@ -17,7 +20,7 @@ import java.io._;
    * @return Returns the number of transitions in this automaton
    */
   def getTransitionCount() = this.transitions.size
-
+  
   /**
    * @return Returns an automaton that accepts the complement of the language of the given automaton
    */
@@ -47,7 +50,7 @@ import java.io._;
    */
   def union(automaton: Automaton): Automaton = {
     val newStartState = new State()
-    new Automaton(newStartState, this.finalStates ++ automaton.finalStates, this.transitions ++ automaton.transitions + ((newStartState, '\0') -> this.startState) + ((newStartState, '\0') -> automaton.startState))
+    new Automaton(newStartState, this.finalStates ++ automaton.finalStates, this.transitions ++ automaton.transitions + (((newStartState, '\0'), this.startState)) + (((newStartState, '\0'), automaton.startState)))
   }
 
   /**
@@ -67,7 +70,7 @@ import java.io._;
    */
   def repeat(): Automaton = {
     val newStartState = new State()
-    new Automaton(newStartState, this.finalStates + newStartState, this.transitions ++ (this.finalStates.map((_, '\0') -> this.startState)) + ((newStartState, '\0') -> this.startState))
+    new Automaton(newStartState, this.finalStates + newStartState, this.transitions ++ (this.finalStates.map(finalState => ((finalState, '\0'), this.startState))) + (((newStartState, '\0'), this.startState)))
   }
 
   /**
@@ -129,7 +132,7 @@ import java.io._;
   def concatenate(automaton: Automaton): Automaton = {
     //we must use a clone of the automaton given to prevent incorrect results if it references this automaton
     val automatonClone = automaton.clone
-    new Automaton(this.startState, automatonClone.finalStates, this.transitions ++ automatonClone.transitions ++ (this.finalStates.map((_, '\0') -> automatonClone.startState)))
+    new Automaton(this.startState, automatonClone.finalStates, this.transitions ++ automatonClone.transitions ++ (this.finalStates.map(finalState => ((finalState, '\0'), automatonClone.startState))))
   }
 
   /**
@@ -361,7 +364,7 @@ import java.io._;
    * @param newLetter
    * @return Returns an automaton with all transitions on oldLetter replaced with transitions on newLetter
    */
-  def substitute(oldLetter: Char, newLetter: Char): Automaton = new Automaton(this.startState, this.finalStates, this.transitions.map(transition => if (transition._1._2 == oldLetter) ((transition._1._1, newLetter) -> transition._2) else transition))
+  def substitute(oldLetter: Char, newLetter: Char): Automaton = new Automaton(this.startState, this.finalStates, this.transitions.map(transition => if (transition._1._2 == oldLetter) ((transition._1._1, newLetter), transition._2) else transition))
 
   /**
    * @param oldLetter
