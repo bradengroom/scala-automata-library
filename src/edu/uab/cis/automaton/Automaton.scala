@@ -3,11 +3,11 @@ package edu.uab.cis.automaton;
 import java.io._;
 
 @serializable
-class Automaton(val startState: State, val finalStates: Set[State], val transitions: Set[((State, Char), State)]) {
+class Automaton(val startState: State, val finalStates: Set[State], val transitions: Set[(State, Char, State)]) {
 
   //set of states and characters for this automaton
   val states = getReachableStates(this.startState)
-  val alphabet = this.transitions.map(_._1._2).toSet - '\0'
+  val alphabet = this.transitions.map(_._2).toSet - '\0'
   val deadStates = ((states--finalStates)-startState).filter(state => this.finalStates.forall(finalState => !this.pathExists(state, finalState)))
   val liveStates = this.states -- this.deadStates
 
@@ -50,7 +50,7 @@ class Automaton(val startState: State, val finalStates: Set[State], val transiti
    */
   def union(automaton: Automaton): Automaton = {
     val newStartState = new State()
-    new Automaton(newStartState, this.finalStates ++ automaton.finalStates, this.transitions ++ automaton.transitions + (((newStartState, '\0'), this.startState)) + (((newStartState, '\0'), automaton.startState)))
+    new Automaton(newStartState, this.finalStates ++ automaton.finalStates, this.transitions ++ automaton.transitions + ((newStartState, '\0', this.startState)) + ((newStartState, '\0', automaton.startState)))
   }
 
   /**
@@ -70,7 +70,7 @@ class Automaton(val startState: State, val finalStates: Set[State], val transiti
    */
   def repeat(): Automaton = {
     val newStartState = new State()
-    new Automaton(newStartState, this.finalStates + newStartState, this.transitions ++ (this.finalStates.map(finalState => ((finalState, '\0'), this.startState))) + (((newStartState, '\0'), this.startState)))
+    new Automaton(newStartState, this.finalStates + newStartState, this.transitions ++ (this.finalStates.map(finalState => (finalState, '\0', this.startState))) + ((newStartState, '\0', this.startState)))
   }
 
   /**
@@ -83,7 +83,7 @@ class Automaton(val startState: State, val finalStates: Set[State], val transiti
    */
   def reverse(): Automaton = {
     val newStart = new State()
-    val newTransitions = this.transitions.map(transition => ((transition._2, transition._1._2), transition._1._1)) ++ this.finalStates.map(state => ((newStart, '\0'), state))
+    val newTransitions = this.transitions.map(transition => (transition._3, transition._2, transition._1)) ++ this.finalStates.map(state => (newStart, '\0', state))
     new Automaton(newStart, Set(this.startState), newTransitions)
   }
 
@@ -94,21 +94,21 @@ class Automaton(val startState: State, val finalStates: Set[State], val transiti
   def intersect(automaton: Automaton): Automaton = {
     def intersect_r(intersection: Automaton): Automaton = {
       //if we have all need transitions
-      if (intersection.states.forall(state => intersection.transitions.filter(_._1._1 == state).size > 0)) {
+      if (intersection.states.forall(state => intersection.transitions.filter(_._1 == state).size > 0)) {
         intersection
       } else {
         //we need to get transitions for states that do not have transitions yet
-        val statesToExplore: Set[State] = intersection.states.filter(state => intersection.transitions.filter(transition => transition._1._1 == state).size == 0)
-        val transitionsToCheck: Set[((State, Char), Set[State])] = statesToExplore.flatMap(state => {
+        val statesToExplore: Set[State] = intersection.states.filter(state => intersection.transitions.filter(transition => transition._1 == state).size == 0)
+        val transitionsToCheck: Set[(State, Char, Set[State])] = statesToExplore.flatMap(state => {
           (this.alphabet | automaton.alphabet).map(letter => {
-            ((state, letter), this.transitionAndEpsilonJump(state.associatedStates, letter) | automaton.transitionAndEpsilonJump(state.associatedStates, letter))
+            (state, letter, this.transitionAndEpsilonJump(state.associatedStates, letter) | automaton.transitionAndEpsilonJump(state.associatedStates, letter))
           })
         })
         val statesToAdd: Set[State] = transitionsToCheck.filter(transition => {
-          !intersection.states.map(_.associatedStates).contains(transition._2)
-        }).map(transition => new State(transition._2))
-        val transitionsToAdd: Set[((State, Char), State)] = transitionsToCheck.map(transition => {
-          ((transition._1._1, transition._1._2), (intersection.states ++ statesToAdd).filter(_.associatedStates == transition._2).head)
+          !intersection.states.map(_.associatedStates).contains(transition._3)
+        }).map(transition => new State(transition._3))
+        val transitionsToAdd: Set[(State, Char, State)] = transitionsToCheck.map(transition => {
+          (transition._1, transition._2, (intersection.states ++ statesToAdd).filter(_.associatedStates == transition._3).head)
         })
         intersect_r(new Automaton(intersection.startState, (intersection.states ++ statesToAdd).filter(_.associatedStates.intersect(this.finalStates).size > 0) intersect (intersection.states ++ statesToAdd).filter(_.associatedStates.intersect(automaton.finalStates).size > 0), intersection.transitions ++ transitionsToAdd))
       }
@@ -132,7 +132,7 @@ class Automaton(val startState: State, val finalStates: Set[State], val transiti
   def concatenate(automaton: Automaton): Automaton = {
     //we must use a clone of the automaton given to prevent incorrect results if it references this automaton
     val automatonClone = automaton.clone
-    new Automaton(this.startState, automatonClone.finalStates, this.transitions ++ automatonClone.transitions ++ (this.finalStates.map(finalState => ((finalState, '\0'), automatonClone.startState))))
+    new Automaton(this.startState, automatonClone.finalStates, this.transitions ++ automatonClone.transitions ++ (this.finalStates.map(finalState => (finalState, '\0', automatonClone.startState))))
   }
 
   /**
@@ -160,21 +160,21 @@ class Automaton(val startState: State, val finalStates: Set[State], val transiti
   def minus(automaton: Automaton): Automaton = {
     def minus_r(intersection: Automaton): Automaton = {
       //if we have all need transitions
-      if (intersection.states.forall(state => intersection.transitions.filter(_._1._1 == state).size > 0)) {
+      if (intersection.states.forall(state => intersection.transitions.filter(_._1 == state).size > 0)) {
         intersection
       } else {
         //we need to get transitions for states that do not have transitions yet
-        val statesToExplore: Set[State] = intersection.states.filter(state => intersection.transitions.filter(transition => transition._1._1 == state).size == 0)
-        val transitionsToCheck: Set[((State, Char), Set[State])] = statesToExplore.flatMap(state => {
+        val statesToExplore: Set[State] = intersection.states.filter(state => intersection.transitions.filter(transition => transition._1 == state).size == 0)
+        val transitionsToCheck: Set[(State, Char, Set[State])] = statesToExplore.flatMap(state => {
           (this.alphabet | automaton.alphabet).map(letter => {
-            ((state, letter), this.transitionAndEpsilonJump(state.associatedStates, letter) | automaton.transitionAndEpsilonJump(state.associatedStates, letter))
+            (state, letter, this.transitionAndEpsilonJump(state.associatedStates, letter) | automaton.transitionAndEpsilonJump(state.associatedStates, letter))
           })
         })
         val statesToAdd: Set[State] = transitionsToCheck.filter(transition => {
-          !intersection.states.map(_.associatedStates).contains(transition._2)
-        }).map(transition => new State(transition._2))
-        val transitionsToAdd: Set[((State, Char), State)] = transitionsToCheck.map(transition => {
-          ((transition._1._1, transition._1._2), (intersection.states ++ statesToAdd).filter(_.associatedStates == transition._2).head)
+          !intersection.states.map(_.associatedStates).contains(transition._3)
+        }).map(transition => new State(transition._3))
+        val transitionsToAdd: Set[(State, Char, State)] = transitionsToCheck.map(transition => {
+          (transition._1, transition._2, (intersection.states ++ statesToAdd).filter(_.associatedStates == transition._3).head)
         })
         minus_r(new Automaton(intersection.startState, (intersection.states ++ statesToAdd).filter(_.associatedStates.intersect(this.finalStates).size > 0) -- (intersection.states ++ statesToAdd).filter(_.associatedStates.intersect(automaton.finalStates).size > 0), intersection.transitions ++ transitionsToAdd))
       }
@@ -206,7 +206,7 @@ class Automaton(val startState: State, val finalStates: Set[State], val transiti
    * @param letter
    * @return Returns the resulting set of states after transitioning on the given letter from the given state
    */
-  def transition(state: State, letter: Char): Set[State] = this.transitions.filter(transition => transition._1._1 == state && transition._1._2 == letter).map(_._2)
+  def transition(state: State, letter: Char): Set[State] = this.transitions.filter(transition => transition._1 == state && transition._2 == letter).map(_._3)
 
   /**
    * @param states
@@ -277,11 +277,11 @@ class Automaton(val startState: State, val finalStates: Set[State], val transiti
    */
   def isDeterministic(): Boolean = {
     //no state has epsilon jumps
-    this.transitions.forall(transition => !(transition._1._2 == '\0')) &&
+    this.transitions.forall(transition => !(transition._2 == '\0')) &&
       //every state has the same alphabet as the initial state
-      this.states.forall(state => this.transitions.filter(_._1._1 == state).map(_._1._2).toSet == this.alphabet) &&
+      this.states.forall(state => this.transitions.filter(_._1 == state).map(_._2).toSet == this.alphabet) &&
       //each state has no more than one transition per character
-      this.states.forall(state => this.alphabet.forall(letter => this.transitions.filter(transition => transition._1._1 == state && transition._1._2 == letter).size == 1))
+      this.states.forall(state => this.alphabet.forall(letter => this.transitions.filter(transition => transition._1 == state && transition._2 == letter).size == 1))
   }
 
   /**
@@ -296,21 +296,21 @@ class Automaton(val startState: State, val finalStates: Set[State], val transiti
   def getRelativeDFA(alphabet: Set[Char]): Automaton = {
     def getRelativeDFA_r(automaton: Automaton): Automaton = {
       //if we have all need transitions
-      if (automaton.states.forall(state => automaton.transitions.filter(_._1._1 == state).size > 0)) {
+      if (automaton.states.forall(state => automaton.transitions.filter(_._1 == state).size > 0)) {
         automaton
       } else {
         //we need to get transitions for states that do not have transitions yet
-        val statesToExplore: Set[State] = automaton.states.filter(state => automaton.transitions.filter(transition => transition._1._1 == state).size == 0)
-        val transitionsToCheck: Set[((State, Char), Set[State])] = statesToExplore.flatMap(state => {
+        val statesToExplore: Set[State] = automaton.states.filter(state => automaton.transitions.filter(transition => transition._1 == state).size == 0)
+        val transitionsToCheck: Set[(State, Char, Set[State])] = statesToExplore.flatMap(state => {
           alphabet.map(letter => {
-            ((state, letter), this.transitionAndEpsilonJump(state.associatedStates, letter))
+            (state, letter, this.transitionAndEpsilonJump(state.associatedStates, letter))
           })
         })
         val statesToAdd: Set[State] = transitionsToCheck.filter(transition => {
-          !automaton.states.map(_.associatedStates).contains(transition._2)
-        }).map(transition => new State(transition._2))
-        val transitionsToAdd: Set[((State, Char), State)] = transitionsToCheck.map(transition => {
-          ((transition._1._1, transition._1._2), (automaton.states ++ statesToAdd).filter(_.associatedStates == transition._2).head)
+          !automaton.states.map(_.associatedStates).contains(transition._3)
+        }).map(transition => new State(transition._3))
+        val transitionsToAdd: Set[(State, Char, State)] = transitionsToCheck.map(transition => {
+          (transition._1, transition._2, (automaton.states ++ statesToAdd).filter(_.associatedStates == transition._3).head)
         })
         getRelativeDFA_r(new Automaton(automaton.startState, (automaton.states ++ statesToAdd).filter(_.associatedStates.intersect(this.finalStates).size > 0), automaton.transitions ++ transitionsToAdd))
       }
@@ -364,7 +364,7 @@ class Automaton(val startState: State, val finalStates: Set[State], val transiti
    * @param newLetter
    * @return Returns an automaton with all transitions on oldLetter replaced with transitions on newLetter
    */
-  def substitute(oldLetter: Char, newLetter: Char): Automaton = new Automaton(this.startState, this.finalStates, this.transitions.map(transition => if (transition._1._2 == oldLetter) ((transition._1._1, newLetter), transition._2) else transition))
+  def substitute(oldLetter: Char, newLetter: Char): Automaton = new Automaton(this.startState, this.finalStates, this.transitions.map(transition => if (transition._2 == oldLetter) (transition._1, newLetter, transition._3) else transition))
 
   /**
    * @param oldLetter
@@ -379,10 +379,10 @@ class Automaton(val startState: State, val finalStates: Set[State], val transiti
    * @return Returns the automaton with transitions on oldLetter with transitions the automaton given
    */
   def substitute(oldLetter: Char, automaton: Automaton): Automaton = {
-    val transitionsToChange = this.transitions.filter(transition => transition._1._2 == oldLetter)
-    val newTransitions: Set[((State, Char), State)] = transitionsToChange.flatMap(transition => {
+    val transitionsToChange = this.transitions.filter(transition => transition._2 == oldLetter)
+    val newTransitions: Set[(State, Char, State)] = transitionsToChange.flatMap(transition => {
       val automatonClone = automaton.clone
-      automatonClone.transitions ++ automatonClone.finalStates.map(finalState => ((finalState, '\0'), transition._2)) + Set(automatonClone.startState).map(start => ((transition._1._1, '\0'), automatonClone.startState)).head
+      automatonClone.transitions ++ automatonClone.finalStates.map(finalState => (finalState, '\0', transition._3)) + Set(automatonClone.startState).map(start => (transition._1, '\0', automatonClone.startState)).head
     })
     new Automaton(this.startState, this.finalStates, (this.transitions -- transitionsToChange) ++ newTransitions)
   }
@@ -398,7 +398,7 @@ class Automaton(val startState: State, val finalStates: Set[State], val transiti
    * @param state
    * @return Returns the set of states that the given state can reach on any single transition
    */
-  def getConnectedStates(state: State): Set[State] = this.transitions.filter(_._1._1 == state).map(_._2).toSet
+  def getConnectedStates(state: State): Set[State] = this.transitions.filter(_._1 == state).map(_._3).toSet
 
   /**
    * @param states
@@ -454,7 +454,7 @@ class Automaton(val startState: State, val finalStates: Set[State], val transiti
   override def clone(): Automaton = {
     val newStates = this.states.map(state => new State(Set(state)))
     val newFinalStates = newStates.filter(state => this.finalStates.contains(state.associatedStates.head))
-    val newTransitions = this.transitions.map(transition => ((newStates.filter(state => state.associatedStates == Set(transition._1._1)).head, transition._1._2), newStates.filter(state => state.associatedStates == Set(transition._2)).head))
+    val newTransitions = this.transitions.map(transition => (newStates.filter(state => state.associatedStates == Set(transition._1)).head, transition._2, newStates.filter(state => state.associatedStates == Set(transition._3)).head))
     new Automaton(newStates.filter(state => state.associatedStates.head == this.startState).head, newFinalStates, newTransitions)
   }
 
@@ -463,20 +463,20 @@ class Automaton(val startState: State, val finalStates: Set[State], val transiti
    */
   def print() = {
     println("State " + this.startState.getId + (if (this.finalStates.contains(this.startState)) " [initial][final]:" else " [initial]:"))
-    this.transitions.filter(_._1._1 == this.startState).foreach(transition => {
-      if (transition._1._2 == '\0') {
-        println("	-> " + transition._2.getId)
+    this.transitions.filter(_._1 == this.startState).foreach(transition => {
+      if (transition._2 == '\0') {
+        println("	-> " + transition._3.getId)
       } else {
-        println("	" + transition._1._2 + "-> " + transition._2.getId)
+        println("	" + transition._2 + "-> " + transition._3.getId)
       }
     })
     (this.states - this.startState).foreach(state => {
       println("State " + state.getId + (if (this.finalStates.contains(state)) " [final]:" else " :"))
-      this.transitions.filter(_._1._1 == state).foreach(transition => {
-        if (transition._1._2 == '\0') {
-          println("	-> " + transition._2.getId)
+      this.transitions.filter(_._1 == state).foreach(transition => {
+        if (transition._2 == '\0') {
+          println("	-> " + transition._3.getId)
         } else {
-          println("	" + transition._1._2 + "-> " + transition._2.getId)
+          println("	" + transition._2 + "-> " + transition._3.getId)
         }
       })
     })
