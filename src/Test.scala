@@ -12,7 +12,7 @@ object Test {
     println("************")
     println(cfgY)
     println("************")
-    println(cfgX union cfgY)
+    println(cfgX|cfgY)
     //    println("**********")
     //    println(au.toCFG)
     //    println("**********")
