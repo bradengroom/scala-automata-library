@@ -480,25 +480,20 @@ class Automaton(val startState: State, val finalStates: Set[State], val transiti
   /**
    * Prints the automaton
    */
-  def print() = {
-    println("State " + this.startState.getId + (if (this.finalStates.contains(this.startState)) " [initial][final]:" else " [initial]:"))
-    this.transitions.filter(_._1 == this.startState).foreach(transition => {
-      if (transition._2 == '\0') {
-        println("	ϵ-> " + transition._3.getId)
-      } else {
-        println("	" + transition._2 + "-> " + transition._3.getId)
-      }
-    })
-    (this.states - this.startState).foreach(state => {
-      println("State " + state.getId + (if (this.finalStates.contains(state)) " [final]:" else " :"))
-      this.transitions.filter(_._1 == state).foreach(transition => {
-        if (transition._2 == '\0') {
-          println("	ϵ-> " + transition._3.getId)
-        } else {
-          println("	" + transition._2 + "-> " + transition._3.getId)
-        }
-      })
-    })
+  override def toString() = {
+    def toString_r(state: State): String = {
+      "State " + state.getId + (if (this.finalStates.contains(state)) " [final]:" else " :") + "\n" +
+      this.transitions.filter(_._1 == state).map(transition => {
+        if (transition._2 == '\0')
+          "	ϵ-> " + transition._3.getId
+        else 
+          "	" + transition._2 + "-> " + transition._3.getId
+      }).reduce(_+"\n"+_)
+    }
+    toString_r(this.startState) + "\n" +
+    (this.states - this.startState).map(state => {
+      toString_r(state)
+    }).reduce(_+"\n"+_)
   }
 
   /**
