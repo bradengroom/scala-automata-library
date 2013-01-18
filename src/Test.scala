@@ -6,11 +6,11 @@ object Test {
   def main(args: Array[String]) = {
 
     val au = ((a + b)*).getDFA
-    println(au.toString)
+    println(au)
     println("**********")
     println(au.toCFG)
     println("**********")
-    println(au.toCFG.toPDAString)
+    println(au.toCFG.pda)
 
   }
 

@@ -480,7 +480,7 @@ class Automaton(val startState: State, val finalStates: Set[State], val transiti
   /**
    * Prints the automaton
    */
-  override def toString() = {
+  override def toString(): String = {
     def toString_r(state: State): String = {
       "State " + state.getId + (if (this.finalStates.contains(state)) " [final]:" else " :") + "\n" +
       this.transitions.filter(_._1 == state).map(transition => {
