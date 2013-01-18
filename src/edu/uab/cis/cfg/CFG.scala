@@ -8,6 +8,30 @@ class CFG(val startVariable: String, val rules: Set[(String, List[Any])]) {
   val variables: Set[String] = rules.map(_._1)
   val alphabet: Set[Char] = rules.flatMap(rule => rule._2.filter(_.isInstanceOf[Char]).map(_.asInstanceOf[Char]))
 
+  def union(cfg: CFG): CFG = {
+    new CFG("S",
+      this.rules.map(rule => {
+        (rule._1 + "X", rule._2.map(result => {
+          result match {
+            case string: String => string + "X"
+            case char: Char => char
+          }
+        }))
+      }) ++
+        cfg.rules.map(rule => {
+          (rule._1 + "Y", rule._2.map(result => {
+            result match {
+              case string: String => string + "Y"
+              case char: Char => char
+            }
+          }))
+        }) +
+        (("S", List(this.startVariable + "X"))) +
+        (("S", List(cfg.startVariable + "Y"))))
+  }
+  
+  def |(cfg: CFG) = this.union(cfg)
+
   lazy val pda: PDA = {
     val startState = new State
     val state = new State
@@ -37,9 +61,9 @@ class CFG(val startVariable: String, val rules: Set[(String, List[Any])]) {
   //  }
 
   override def toString(): String = {
-    def toString_r(rule: Rule): String = {//(String, List[Any])
-      rule._1 + " -> " + 
-      rule._2.map(result => {
+    def toString_r(rule: Rule): String = { //(String, List[Any])
+      rule._1 + " -> " +
+        rule._2.map(result => {
           result match {
             case string: String => "(" + result.toString + ")"
             case char: Char => "\"" + (if (result == '\0') "ϵ" else result) + "\""

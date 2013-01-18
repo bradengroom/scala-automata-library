@@ -6,8 +6,13 @@ object Test {
 
   def main(args: Array[String]) = {
 
-    val automaton = ((a + b)*)
-    println(automaton.toCFG.pda)
+    val cfgX = (a*).toCFG
+    val cfgY = (b*).toCFG
+    println(cfgX)
+    println("************")
+    println(cfgY)
+    println("************")
+    println(cfgX union cfgY)
     //    println("**********")
     //    println(au.toCFG)
     //    println("**********")
