@@ -48,7 +48,7 @@ object BasicAutomaton {
   def char(char: Char): Automaton = {
     val state1 = new State()
     val state2 = new State()
-    new Automaton(state1, Set(state2), Set(((state1, char), state2)))
+    new Automaton(state1, Set(state2), Set((state1, char, state2)))
   }
 
   def a(): Automaton = char('a')

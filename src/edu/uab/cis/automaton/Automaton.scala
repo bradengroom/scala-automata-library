@@ -7,9 +7,9 @@ class Automaton(val startState: State, val finalStates: Set[State], val transiti
 
   //set of states and characters for this automaton
   val states = getReachableStates(this.startState)
-  val alphabet = this.transitions.map(_._2).toSet - '\0'
-  val deadStates = ((states--finalStates)-startState).filter(state => this.finalStates.forall(finalState => !this.pathExists(state, finalState)))
-  val liveStates = this.states -- this.deadStates
+  lazy val alphabet = this.transitions.map(_._2).toSet - '\0'
+  lazy val deadStates = ((states -- finalStates) - startState).filter(state => this.finalStates.forall(finalState => !this.pathExists(state, finalState)))
+  lazy val liveStates = this.states -- this.deadStates
 
   /**
    * @return Returns the number of states in this automaton
@@ -20,17 +20,22 @@ class Automaton(val startState: State, val finalStates: Set[State], val transiti
    * @return Returns the number of transitions in this automaton
    */
   def getTransitionCount() = this.transitions.size
-  
+
   /**
    * @return Returns an automaton that accepts the complement of the language of the given automaton
    */
-  def complement(): Automaton = {
+  def unary_!(): Automaton = {
     //the automaton must be a DFA in order to get the complement properly
     if (this.isDeterministic)
       new Automaton(this.startState, (this.states -- this.finalStates), this.transitions)
     else
-      this.getDFA.complement
+      this.getDFA.unary_!
   }
+
+  /**
+   * @return Returns an automaton that accepts the complement of the language of the given automaton
+   */
+  def complement = this.unary_!
 
   /**
    * @param alphabet
