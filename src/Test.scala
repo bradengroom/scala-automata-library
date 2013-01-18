@@ -1,16 +1,17 @@
 import edu.uab.cis.automaton._
 import edu.uab.cis.cfg._
+import edu.uab.cis.conversions._
 
 object Test {
 
   def main(args: Array[String]) = {
 
-    val au = ((a + b)*).getDFA
-    println(au)
-    println("**********")
-    println(au.toCFG)
-    println("**********")
-    println(au.toCFG.pda)
+    val automaton = ((a + b)*)
+    println(automaton.toCFG.pda)
+    //    println("**********")
+    //    println(au.toCFG)
+    //    println("**********")
+    //    println(au.toCFG.pda)
 
   }
 

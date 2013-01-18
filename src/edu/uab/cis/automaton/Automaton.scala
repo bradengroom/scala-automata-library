@@ -1,5 +1,6 @@
 package edu.uab.cis.automaton;
 
+import edu.uab.cis.conversions.Conversions
 import edu.uab.cis.cfg._
 import java.io._;
 
@@ -453,19 +454,11 @@ class Automaton(val startState: State, val finalStates: Set[State], val transiti
     else
       this.repeat(min) intersect this.repeat(max + 1).complement
   }
-
+  
   /**
-   * @return Returns the automaton as a CFG
-   */
-  implicit def toCFG(): CFG = {
-    new CFG(this.startState.getId.toString,
-      this.transitions.map(transition => {
-        transition._1.getId.toString -> List(transition._2, transition._3.getId.toString)
-      }) ++
-        this.finalStates.map(finalState => {
-          finalState.getId.toString -> List('\0')
-        }))
-  }
+ * @return Returns the automaton as a CFG
+ */
+def toCFG(): CFG = Conversions.Automaton2CFG(this)
 
   /**
    * @see java.lang.Object#clone()
