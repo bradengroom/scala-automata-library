@@ -1,5 +1,6 @@
 package edu.uab.cis.automaton;
 
+import edu.uab.cis.cfg._
 import java.io._;
 
 @serializable
@@ -454,6 +455,19 @@ class Automaton(val startState: State, val finalStates: Set[State], val transiti
   }
 
   /**
+   * @return Returns the automaton as a CFG
+   */
+  implicit def toCFG(): CFG = {
+    new CFG(this.startState.getId.toString,
+      this.transitions.map(transition => {
+        transition._1.getId.toString -> List(transition._2, transition._3.getId.toString)
+      }) ++
+        this.finalStates.map(finalState => {
+          finalState.getId.toString -> List('\0')
+        }))
+  }
+
+  /**
    * @see java.lang.Object#clone()
    */
   override def clone(): Automaton = {
@@ -470,7 +484,7 @@ class Automaton(val startState: State, val finalStates: Set[State], val transiti
     println("State " + this.startState.getId + (if (this.finalStates.contains(this.startState)) " [initial][final]:" else " [initial]:"))
     this.transitions.filter(_._1 == this.startState).foreach(transition => {
       if (transition._2 == '\0') {
-        println("	-> " + transition._3.getId)
+        println("	ϵ-> " + transition._3.getId)
       } else {
         println("	" + transition._2 + "-> " + transition._3.getId)
       }
@@ -479,7 +493,7 @@ class Automaton(val startState: State, val finalStates: Set[State], val transiti
       println("State " + state.getId + (if (this.finalStates.contains(state)) " [final]:" else " :"))
       this.transitions.filter(_._1 == state).foreach(transition => {
         if (transition._2 == '\0') {
-          println("	-> " + transition._3.getId)
+          println("	ϵ-> " + transition._3.getId)
         } else {
           println("	" + transition._2 + "-> " + transition._3.getId)
         }

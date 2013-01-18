@@ -1,29 +1,15 @@
 import edu.uab.cis.automaton._
-import edu.uab.cis.grammar._
+import edu.uab.cis.cfg._
 
 object Test {
 
   def main(args: Array[String]) = {
 
-    val au = ((a+b)*).getDFA
+    val au = ((a + b)*).getDFA
     au.print
     println("**********")
-    (a+(!au)).print
+    println(au.toCFG)
 
-//        val grammarA = new Grammar("S", Set(
-//        		"S" -> List('a', "S", 'b'),
-//        		"S" -> List("X","Y"),
-//        		"X" -> List('a'),
-//        		"Y" -> List('b')
-//            ))
-//        
-//        println(grammarA.asInstanceOf[PDA].toString)
-//        val grammarB = new Grammar(3, Set(
-//        		3 -> List("b", 4, "c"),
-//        		4 -> List(None)
-//            ))
-//        val grammarC = grammarA union grammarB
-//        println((grammarC).toString)
   }
 
   def char(char: Char): Automaton = {
