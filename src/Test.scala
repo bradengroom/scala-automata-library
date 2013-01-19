@@ -6,20 +6,14 @@ object Test {
 
   def main(args: Array[String]) = {
 
-    val cfgX = (a*).toCFG
-    val cfgY = (b*).toCFG
-    println(cfgX)
-    println("************")
-    println(cfgY)
-    println("************")
-    println(cfgX|cfgY)
-    //    println("**********")
-    //    println(au.toCFG)
-    //    println("**********")
-    //    println(au.toCFG.pda)
+    val automaton = ((a+b)*)
+    println(automaton)
+
 
   }
-
+  
+  
+  
   def char(char: Char): Automaton = {
     val state1 = new State()
     val state2 = new State()
@@ -79,4 +73,16 @@ object Test {
   def Y(): Automaton = char('Y')
   def Z(): Automaton = char('Z')
 
+  /**
+   * @return Returns the automaton as a CFG
+   */
+  implicit def Automaton2CFG(automaton: Automaton): CFG = {
+    new CFG(automaton.startState.getId.toString,
+      automaton.transitions.map(transition => {
+        transition._1.getId.toString -> List(transition._2, transition._3.getId.toString)
+      }) ++
+        automaton.finalStates.map(finalState => {
+          finalState.getId.toString -> List('\0')
+        }))
+  }
 }

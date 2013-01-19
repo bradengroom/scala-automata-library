@@ -454,11 +454,11 @@ class Automaton(val startState: State, val finalStates: Set[State], val transiti
     else
       this.repeat(min) intersect this.repeat(max + 1).complement
   }
-  
+
   /**
- * @return Returns the automaton as a CFG
- */
-def toCFG(): CFG = Conversions.Automaton2CFG(this)
+   * @return Returns the automaton as a CFG
+   */
+  def toCFG(): CFG = Conversions.Automaton2CFG(this)
 
   /**
    * @see java.lang.Object#clone()
@@ -476,17 +476,17 @@ def toCFG(): CFG = Conversions.Automaton2CFG(this)
   override def toString(): String = {
     def toString_r(state: State): String = {
       "State " + state.getId + (if (this.finalStates.contains(state)) " [final]:" else " :") + "\n" +
-      this.transitions.filter(_._1 == state).map(transition => {
-        if (transition._2 == '\0')
-          "	ϵ-> " + transition._3.getId
-        else 
-          "	" + transition._2 + "-> " + transition._3.getId
-      }).reduce(_+"\n"+_)
+        this.transitions.filter(_._1 == state).map(transition => {
+          if (transition._2 == '\0')
+            "	ϵ-> " + transition._3.getId
+          else
+            "	" + transition._2 + "-> " + transition._3.getId
+        }).reduce(_ + "\n" + _)
     }
     toString_r(this.startState) + "\n" +
-    (this.states - this.startState).map(state => {
-      toString_r(state)
-    }).reduce(_+"\n"+_)
+      (this.states - this.startState).map(state => {
+        toString_r(state)
+      }).reduce(_ + "\n" + _)
   }
 
   /**
