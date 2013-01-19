@@ -1,7 +1,7 @@
-package edu.uab.cis.automaton;
+package edu.uab.cis.regular
 
-import edu.uab.cis.conversions.Conversions
-import edu.uab.cis.cfg._
+import edu.uab.cis._
+import edu.uab.cis.contextfree._
 import java.io._;
 
 @serializable

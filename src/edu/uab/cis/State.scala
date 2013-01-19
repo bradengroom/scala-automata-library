@@ -1,4 +1,5 @@
-package edu.uab.cis.automaton;
+package edu.uab.cis
+
 private object State {
   private var currentId = 0
   private def getNextId = { currentId += 1; currentId }

@@ -1,6 +1,6 @@
-package edu.uab.cis.cfg
+package edu.uab.cis.contextfree
 
-import edu.uab.cis.automaton.State
+import edu.uab.cis._
 
 class CFG(val startVariable: String, val rules: Set[(String, List[Any])]) {
   type Rule = (String, List[Any])
@@ -29,7 +29,7 @@ class CFG(val startVariable: String, val rules: Set[(String, List[Any])]) {
         (("S", List(this.startVariable + "X"))) +
         (("S", List(cfg.startVariable + "Y"))))
   }
-  
+
   def |(cfg: CFG) = this.union(cfg)
 
   lazy val pda: PDA = {

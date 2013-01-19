@@ -1,6 +1,6 @@
-package edu.uab.cis.cfg
+package edu.uab.cis.contextfree
 
-import edu.uab.cis.automaton.State
+import edu.uab.cis._
 
 class PDA(val startRule: ((State, Char, Any), (State, List[Any])), val finalStates: Set[State], val rules: Set[((State, Char, Any), (State, List[Any]))]) {
   type Rule = ((State, Char, Any), (State, List[Any]))

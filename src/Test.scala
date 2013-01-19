@@ -1,19 +1,16 @@
-import edu.uab.cis.automaton._
-import edu.uab.cis.cfg._
-import edu.uab.cis.conversions._
+import edu.uab.cis.regular._
+import edu.uab.cis.contextfree._
+import edu.uab.cis._
 
 object Test {
 
   def main(args: Array[String]) = {
 
-    val automaton = ((a+b)*)
+    val automaton = ((a + b)*)
     println(automaton)
 
-
   }
-  
-  
-  
+
   def char(char: Char): Automaton = {
     val state1 = new State()
     val state2 = new State()
@@ -72,17 +69,4 @@ object Test {
   def X(): Automaton = char('X')
   def Y(): Automaton = char('Y')
   def Z(): Automaton = char('Z')
-
-  /**
-   * @return Returns the automaton as a CFG
-   */
-  implicit def Automaton2CFG(automaton: Automaton): CFG = {
-    new CFG(automaton.startState.getId.toString,
-      automaton.transitions.map(transition => {
-        transition._1.getId.toString -> List(transition._2, transition._3.getId.toString)
-      }) ++
-        automaton.finalStates.map(finalState => {
-          finalState.getId.toString -> List('\0')
-        }))
-  }
 }

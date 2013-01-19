@@ -1,7 +1,7 @@
-package edu.uab.cis.conversions
+package edu.uab.cis
 
-import edu.uab.cis.automaton._
-import edu.uab.cis.cfg._
+import edu.uab.cis.regular._
+import edu.uab.cis.contextfree._
 
 object Conversions {
 

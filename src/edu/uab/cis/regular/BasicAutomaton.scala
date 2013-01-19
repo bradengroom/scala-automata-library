@@ -1,4 +1,6 @@
-package edu.uab.cis.automaton;
+package edu.uab.cis.regular
+
+import edu.uab.cis.State
 
 object BasicAutomaton {
 
