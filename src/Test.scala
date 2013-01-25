@@ -6,8 +6,9 @@ object Test {
 
   def main(args: Array[String]) = {
 
-    val automaton = ((a + b)*)
-    println(automaton)
+    val auto = char('a')
+    println(auto)
+
 
   }
 
