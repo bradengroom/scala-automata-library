@@ -3,6 +3,7 @@ package edu.uab.cis.contextfree
 import edu.uab.cis._
 
 class CFG(val startVariable: String, val rules: Set[(String, List[Any])]) {
+
   type Rule = (String, List[Any])
 
   val variables: Set[String] = rules.map(_._1)
@@ -29,8 +30,29 @@ class CFG(val startVariable: String, val rules: Set[(String, List[Any])]) {
         (("S", List(this.startVariable + "X"))) +
         (("S", List(cfg.startVariable + "Y"))))
   }
-
   def |(cfg: CFG) = this.union(cfg)
+
+  def concatenate(cfg: CFG): CFG = {
+    new CFG("S",
+      this.rules.map(rule => {
+        (rule._1 + "X", rule._2.map(result => {
+          result match {
+            case string: String => string + "X"
+            case char: Char => char
+          }
+        }))
+      }) ++
+        cfg.rules.map(rule => {
+          (rule._1 + "Y", rule._2.map(result => {
+            result match {
+              case string: String => string + "Y"
+              case char: Char => char
+            }
+          }))
+        }) +
+        (("S", List(this.startVariable + "X", cfg.startVariable + "Y"))))
+  }
+  def +(cfg: CFG) = this.concatenate(cfg)
 
   lazy val pda: PDA = {
     val startState = new State
@@ -49,16 +71,6 @@ class CFG(val startVariable: String, val rules: Set[(String, List[Any])]) {
           ((state, '\0', rule._1) -> (state, rule._2))
         }) + startRule + endRule)
   }
-
-  //  private def firstUnusedId(ids: Set[Int]): Int = {
-  //    def firstUnusedId_r(counter: Int): Int = {
-  //      if (ids contains counter)
-  //        firstUnusedId_r(counter + 1)
-  //      else
-  //        counter
-  //    }
-  //    firstUnusedId_r(1)
-  //  }
 
   override def toString(): String = {
     def toString_r(rule: Rule): String = { //(String, List[Any])
