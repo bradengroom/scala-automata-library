@@ -9,6 +9,6 @@ object Test {
 
     val cfgA: CFG = a
     val cfgB: CFG = b
-    println (cfgA+cfgB)
+    println (cfgA*)
   }
 }

@@ -12,47 +12,62 @@ class CFG(val startVariable: String, val rules: Set[(String, List[Any])]) {
   def union(cfg: CFG): CFG = {
     new CFG("S",
       this.rules.map(rule => {
-        (rule._1 + "X", rule._2.map(result => {
+        (rule._1 + "1", rule._2.map(result => {
           result match {
-            case string: String => string + "X"
+            case string: String => string + "1"
             case char: Char => char
           }
         }))
       }) ++
         cfg.rules.map(rule => {
-          (rule._1 + "Y", rule._2.map(result => {
+          (rule._1 + "2", rule._2.map(result => {
             result match {
-              case string: String => string + "Y"
+              case string: String => string + "2"
               case char: Char => char
             }
           }))
         }) +
-        (("S", List(this.startVariable + "X"))) +
-        (("S", List(cfg.startVariable + "Y"))))
+        (("S", List(this.startVariable + "1"))) +
+        (("S", List(cfg.startVariable + "2"))))
   }
   def |(cfg: CFG) = this.union(cfg)
 
   def concatenate(cfg: CFG): CFG = {
     new CFG("S",
       this.rules.map(rule => {
-        (rule._1 + "X", rule._2.map(result => {
+        (rule._1 + "1", rule._2.map(result => {
           result match {
-            case string: String => string + "X"
+            case string: String => string + "1"
             case char: Char => char
           }
         }))
       }) ++
         cfg.rules.map(rule => {
-          (rule._1 + "Y", rule._2.map(result => {
+          (rule._1 + "2", rule._2.map(result => {
             result match {
-              case string: String => string + "Y"
+              case string: String => string + "2"
               case char: Char => char
             }
           }))
         }) +
-        (("S", List(this.startVariable + "X", cfg.startVariable + "Y"))))
+        (("S", List(this.startVariable + "1", cfg.startVariable + "Y"))))
   }
   def +(cfg: CFG) = this.concatenate(cfg)
+
+  def repeat(): CFG = {
+    new CFG("S",
+      this.rules.map(rule => {
+        (rule._1 + "1", rule._2.map(result => {
+          result match {
+            case string: String => string + "1"
+            case char: Char => char
+          }
+        }))
+      }) +
+        (("S", List(this.startVariable + "1", "S"))) +
+        (("S", List('\0'))))
+  }
+  def *() = repeat()
 
   lazy val pda: PDA = {
     val startState = new State
