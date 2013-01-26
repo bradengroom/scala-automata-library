@@ -476,7 +476,7 @@ class Automaton(val startState: State, val finalStates: Set[State], val transiti
   override def toString(): String = {
     def toString_r(state: State): String = {
       if (transitions.filter(_._1 == state).size > 0) {
-        "State " + state.getId + (if (this.finalStates.contains(state)) " [final]:" else " :") + "\n" +
+        "State " + state.getId + (if (this.startState == state) " [initial]" else "") + (if (this.finalStates.contains(state)) " [final]:" else " :") + "\n" +
           this.transitions.filter(_._1 == state).map(transition => {
             if (transition._2 == '\0')
               "	ϵ-> " + transition._3.getId
@@ -484,7 +484,7 @@ class Automaton(val startState: State, val finalStates: Set[State], val transiti
               "	" + transition._2 + "-> " + transition._3.getId
           }).reduce(_ + "\n" + _)
       } else {
-        "State " + state.getId + (if (this.finalStates.contains(state)) " [final]:" else " :") + "\n"
+        "State " + state.getId + (if (this.startState == state) " [initial]" else "") + (if (this.finalStates.contains(state)) " [final]:" else " :") + "\n"
       }
     }
     toString_r(this.startState) + "\n" +

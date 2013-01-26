@@ -52,4 +52,5 @@ object BasicAutomaton {
     val state2 = new State()
     new Automaton(state1, Set(state2), Set((state1, char, state2)))
   }
+
 }
