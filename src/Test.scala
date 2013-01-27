@@ -7,8 +7,7 @@ import edu.uab.cis.regular.Regex._
 object Test {
 
   def main(args: Array[String]) = {
-
-    val auto:Automaton = "(a*)b".getDFA
+    val auto:Automaton = "a{1,2}".getDFA
     println(auto)
   }
 }

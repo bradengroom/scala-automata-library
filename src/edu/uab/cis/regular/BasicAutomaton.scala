@@ -13,7 +13,7 @@ object BasicAutomaton {
   def range(beginChar: Char, endChar: Char): Automaton = {
     val startState = new State()
     val finalState = new State()
-    val transitions: Set[(State,Char,State)] = (beginChar to endChar).map(char => (startState, char, finalState)).toSet
+    val transitions: Set[(State, Char, State)] = (beginChar to endChar).map(char => (startState, char, finalState)).toSet
     new Automaton(startState, Set(finalState), transitions)
   }
 
@@ -61,7 +61,14 @@ object BasicAutomaton {
         regex_r(regexString.substring(getMatchingMarker('(', ')', regexString)), automata ++ List(regex(regexString.substring(1, getMatchingMarker('(', ')', regexString) - 1))))
       } else if (regexString.head == '[') {
         val rangeChars = regexString.substring(1, getMatchingMarker('[', ']', regexString) - 1)
-        regex_r(regexString.substring(getMatchingMarker('[', ']', regexString)), automata ++ List(range(rangeChars.head, rangeChars.charAt(2))))
+        regex_r(regexString.substring(getMatchingMarker('[', ']', regexString)), automata ++ List(range(rangeChars.head, rangeChars.last)))
+      } else if (regexString.head == '{') {
+        val repetionChars = regexString.substring(1, getMatchingMarker('{', '}', regexString) - 1)
+        if (repetionChars.size == 2) {
+          regex_r(regexString.substring(getMatchingMarker('{', '}', regexString)), automata.init ++ List(automata.last.repeat(repetionChars.head.asDigit)))
+        } else {
+          regex_r(regexString.substring(getMatchingMarker('{', '}', regexString)), automata.init ++ List(automata.last.repeat(repetionChars.head.asDigit, repetionChars.last.asDigit)))
+        }
       } else if (regexString.head == '+') {
         val followingAutomata = regex_r(regexString.tail, List())
         if (followingAutomata.isEmpty) {
