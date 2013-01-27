@@ -5,6 +5,8 @@ import edu.uab.cis.contextfree._
 
 object Conversions {
 
+  implicit def String2Automaton(regex: String): Automaton = BasicAutomaton.regex(regex)
+  
   /**
    * @return Returns the automaton as a CFG
    */
