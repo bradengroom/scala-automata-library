@@ -7,7 +7,7 @@ import edu.uab.cis.regular.Regex._
 object Test {
 
   def main(args: Array[String]) = {
-    val auto:Automaton = "a{1,2}".getDFA
+    val auto = "(a*)".getDFA.removeNondistinguishableStates
     println(auto)
   }
 }

@@ -475,7 +475,7 @@ class Automaton(val startState: State, val finalStates: Set[State], val transiti
     else
       this + repeat(min - 1)
   }
-  
+
   def +(): Automaton = repeat(1)
 
   /**
@@ -522,10 +522,14 @@ class Automaton(val startState: State, val finalStates: Set[State], val transiti
         "State " + state.getId + (if (this.startState == state) " [initial]" else "") + (if (this.finalStates.contains(state)) " [final]:" else " :") + "\n"
       }
     }
-    toString_r(this.startState) + "\n" +
-      (this.states - this.startState).map(state => {
-        toString_r(state)
-      }).reduce(_ + "\n" + _)
+    if ((this.states - this.startState).size > 0) {
+      toString_r(this.startState) + "\n" +
+        (this.states - this.startState).map(state => {
+          toString_r(state)
+        }).reduce(_ + "\n" + _)
+    } else {
+      toString_r(this.startState) + "\n"
+    }
   }
 
   /**
