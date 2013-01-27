@@ -6,6 +6,9 @@ object Test {
 
   def main(args: Array[String]) = {
 
-    println("(a|b)+c" accepts "ac")
+    val auto = (a|c)
+    println(auto.getDFA)
+    println("*****************")
+    println(auto.removeNondistinguishableStates)
   }
 }

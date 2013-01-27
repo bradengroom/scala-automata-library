@@ -90,7 +90,7 @@ object BasicAutomaton {
     regex_r(regexString, List()).reduce(_ + _)
   }
 
-  def getMatchingMarker(openMarker: Char, closeMarker: Char, string: String): Int = {
+  private def getMatchingMarker(openMarker: Char, closeMarker: Char, string: String): Int = {
     def getMatchingMarker_r(string: String, count: Int): Int = {
       if (count == 0) {
         string.size

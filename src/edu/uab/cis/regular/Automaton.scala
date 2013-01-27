@@ -211,6 +211,35 @@ class Automaton(val startState: State, val finalStates: Set[State], val transiti
   def ?() = this.optional()
 
   /**
+   * @return Returns the automaton with no indistinguishable states
+   */
+  def removeNondistinguishableStates(): Automaton = {
+    if (!this.isDeterministic) {
+      this.getDFA.removeNondistinguishableStates
+    } else {
+      val newStates: List[State] = (this.finalStates.groupBy(state => this.alphabet.map(letter => (letter -> this.finalStates.contains(this.transition(state, letter).head)))).values ++
+        (this.states -- this.finalStates).groupBy(state => this.alphabet.map(letter => (letter -> this.finalStates.contains(this.transition(state, letter).head)))).values).toList.map(new State(_))
+      val statesToChange: List[State] = newStates.flatMap(_.associatedStates)
+      val newTransitions: Set[Transition] = this.transitions.map(transition => {
+        if (statesToChange.contains(transition._1)) {
+          if (statesToChange.contains(transition._3)) {
+            (newStates.filter(_.associatedStates.contains(transition._1)).head, transition._2, newStates.filter(_.associatedStates.contains(transition._3)).head)
+          } else {
+            (newStates.filter(_.associatedStates.contains(transition._1)).head, transition._2, transition._3)
+          }
+        } else if (statesToChange.contains(transition._3)) {
+          (transition._1, transition._2, newStates.filter(_.associatedStates.contains(transition._3)).head)
+        } else {
+          transition
+        }
+      })
+      val start = if (statesToChange.contains(this.startState)) newStates.filter(_.associatedStates.contains(this.startState)).head else this.startState
+      val finalStates = (this.finalStates -- statesToChange) ++ newStates.filter(state => (state.associatedStates&this.finalStates).size > 0)
+      new Automaton(start,finalStates,newTransitions)
+    }
+  }
+
+  /**
    * @param state
    * @param letter
    * @return Returns the resulting set of states after transitioning on the given letter from the given state
