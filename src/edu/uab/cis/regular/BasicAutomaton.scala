@@ -64,7 +64,11 @@ object BasicAutomaton {
         regex_r(regexString.substring(getMatchingMarker('[', ']', regexString)), automata ++ List(range(rangeChars.head, rangeChars.charAt(2))))
       } else if (regexString.head == '+') {
         val followingAutomata = regex_r(regexString.tail, List())
-        automata.init ++ List(automata.last + followingAutomata.head) ++ followingAutomata.tail
+        if (followingAutomata.isEmpty) {
+          automata.init ++ List(automata.last+)
+        } else {
+          automata.init ++ List(automata.last + followingAutomata.head) ++ followingAutomata.tail
+        }
       } else if (regexString.head == '|') {
         val followingAutomata = regex_r(regexString.tail, List())
         automata.init ++ List(automata.last | followingAutomata.head) ++ followingAutomata.tail

@@ -74,7 +74,7 @@ class Automaton(val startState: State, val finalStates: Set[State], val transiti
    */
   def union(automata: Set[Automaton]): Automaton = {
     val newStart = new State()
-    new Automaton(newStart, (automata+this).flatMap(_.finalStates), (automata+this).flatMap(automaton => automaton.transitions ++ Set((newStart, '\0', automaton.startState))))
+    new Automaton(newStart, (automata + this).flatMap(_.finalStates), (automata + this).flatMap(automaton => automaton.transitions ++ Set((newStart, '\0', automaton.startState))))
   }
 
   /**
@@ -237,8 +237,8 @@ class Automaton(val startState: State, val finalStates: Set[State], val transiti
         }
       })
       val start = if (statesToChange.contains(this.startState)) newStates.filter(_.associatedStates.contains(this.startState)).head else this.startState
-      val finalStates = (this.finalStates -- statesToChange) ++ newStates.filter(state => (state.associatedStates&this.finalStates).size > 0)
-      new Automaton(start,finalStates,newTransitions)
+      val finalStates = (this.finalStates -- statesToChange) ++ newStates.filter(state => (state.associatedStates & this.finalStates).size > 0)
+      new Automaton(start, finalStates, newTransitions)
     }
   }
 
@@ -454,9 +454,8 @@ class Automaton(val startState: State, val finalStates: Set[State], val transiti
   def getReachableStates(state: State): Set[State] = getReachableStates(Set(state))
 
   /**
-   * @param min			Minimum number of times to repeat this automaton
-   * @param max			Maximum number of times to repeat this automaton
-   * @Automaton			Returns the set of states that that the given set of states can reach on any number of transitions
+   * @param state
+   * @return Returns the set of states that that the given set of states can reach on any number of transitions
    */
   def getReachableStates(states: Set[State]): Set[State] = {
     val allStates = states.union(this.getConnectedStates(states))
@@ -468,7 +467,7 @@ class Automaton(val startState: State, val finalStates: Set[State], val transiti
 
   /**
    * @param min	Minimum number of times to repeat this automaton
-   * @Automaton	Returns an automaton that accepts min or greater repetitions of the language of the automaton
+   * @return Returns an automaton that accepts min or greater repetitions of the language of the automaton
    */
   def repeat(min: Int): Automaton = {
     if (min < 1)
@@ -476,11 +475,13 @@ class Automaton(val startState: State, val finalStates: Set[State], val transiti
     else
       this + repeat(min - 1)
   }
+  
+  def +(): Automaton = repeat(1)
 
   /**
    * @param min	Minimum number of times to repeat this automaton
    * @param max	Maximum number of times to repeat this automaton
-   * @Automaton	Returns an automaton that accepts between min and max repetitions of the language of the automaton
+   * @return Returns an automaton that accepts between min and max repetitions of the language of the automaton
    */
   def repeat(min: Int, max: Int): Automaton = {
     if (min > max)

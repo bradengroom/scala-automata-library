@@ -8,6 +8,7 @@ object Test {
 
   def main(args: Array[String]) = {
 
-    println("[A-z]".getDFA.removeNondistinguishableStates)
+    val auto:Automaton = "(a*)b".getDFA
+    println(auto)
   }
 }
