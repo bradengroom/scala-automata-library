@@ -72,7 +72,10 @@ class Automaton(val startState: State, val finalStates: Set[State], val transiti
    * @param automata
    * @return Returns an automaton that accepts the union of the languages of the given automata
    */
-  def union(automata: Set[Automaton]): Automaton = (automata).reduceRight(_ | _) | this
+  def union(automata: Set[Automaton]): Automaton = {
+    val newStart = new State()
+    new Automaton(newStart, (automata+this).flatMap(_.finalStates), (automata+this).flatMap(automaton => automaton.transitions ++ Set((newStart, '\0', automaton.startState))))
+  }
 
   /**
    * @return Returns an automaton that accepts zero or more repetitions of the languages of the given automata
