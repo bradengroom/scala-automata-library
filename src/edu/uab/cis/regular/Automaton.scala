@@ -6,7 +6,7 @@ import java.io._;
 
 @serializable
 class Automaton(val startState: State, val finalStates: Set[State], val transitions: Set[(State, Char, State)]) {
-  
+
   type Transition = (State, Char, State)
 
   //set of states and characters for this automaton
@@ -460,7 +460,7 @@ class Automaton(val startState: State, val finalStates: Set[State], val transiti
   /**
    * @return Returns the automaton as a CFG
    */
-  def toCFG(): CFG = Conversions.Automaton2CFG(this)
+  def toCFG(): CFG = this
 
   /**
    * @see java.lang.Object#clone()
@@ -528,6 +528,24 @@ class Automaton(val startState: State, val finalStates: Set[State], val transiti
 }
 
 object Automaton {
+
+  /**
+   * @return Returns the string as an automaton
+   */
+  implicit def String2Automaton(regex: String): Automaton = BasicAutomaton.regex(regex)
+
+  /**
+   * @return Returns the automaton as a CFG
+   */
+  implicit def Automaton2CFG(automaton: Automaton): CFG = {
+    new CFG(automaton.startState.getId.toString,
+      automaton.transitions.map(transition => {
+        transition._1.getId.toString -> List(transition._2, transition._3.getId.toString)
+      }) ++
+        automaton.finalStates.map(finalState => {
+          finalState.getId.toString -> List('\0')
+        }))
+  }
 
   /**
    * @param filePath

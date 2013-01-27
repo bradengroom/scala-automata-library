@@ -108,3 +108,8 @@ class CFG(val startVariable: String, val rules: Set[(String, List[Any])]) {
   }
 }
 
+object CFG {
+  
+  implicit def CFG2PDA(cfg: CFG): PDA = cfg.pda
+}
+
