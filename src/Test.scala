@@ -8,6 +8,6 @@ object Test {
 
   def main(args: Array[String]) = {
 
-    println("[a-c]".getDFA.removeNondistinguishableStates)
+    println("[A-z]".getDFA.removeNondistinguishableStates)
   }
 }

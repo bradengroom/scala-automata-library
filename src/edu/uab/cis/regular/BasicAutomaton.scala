@@ -11,8 +11,10 @@ object BasicAutomaton {
    * @return Returns an automaton that accepts a characters from beginChar to endChar
    */
   def range(beginChar: Char, endChar: Char): Automaton = {
-    val automata = (beginChar to endChar).map(char => BasicAutomaton.char(char)).toSet
-    automata.head.union(automata.tail)
+    val startState = new State()
+    val finalState = new State()
+    val transitions: Set[(State,Char,State)] = (beginChar to endChar).map(char => (startState, char, finalState)).toSet
+    new Automaton(startState, Set(finalState), transitions)
   }
 
   /**
