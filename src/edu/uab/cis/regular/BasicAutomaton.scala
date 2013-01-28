@@ -73,8 +73,8 @@ def regex(regexString: String): Automaton = {
           regex_r(regexString.substring(getMatchingMarker('{', '}', regexString)), automata.init ++ List(automata.last.repeat(repetionChars.head.toInt, repetionChars.last.toInt)))
         }
       } else if (regexString.head == '+') {
-        val followingAutomata = regex_r(regexString.tail, List())
-        if (followingAutomata.isEmpty) {
+//        val followingAutomata = regex_r(regexString.tail, List())
+        if (regexString.tail.isEmpty) {
           automata.init ++ List(automata.last+)
         } else {
           List(automata.reduce(_+_) + regex(regexString.tail))
