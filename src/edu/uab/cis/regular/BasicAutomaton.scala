@@ -52,8 +52,11 @@ object BasicAutomaton {
     new Automaton(state1, Set(state2), Set((state1, char, state2)))
   }
 
-  def regex(regexString: String): Automaton = {
-
+  /**
+ * @param regexString
+ * @return Returns the provided regular expression as an automaton
+ */
+def regex(regexString: String): Automaton = {
     def regex_r(regexString: String, automata: List[Automaton]): List[Automaton] = {
       if (regexString.isEmpty) {
         automata
@@ -63,25 +66,23 @@ object BasicAutomaton {
         val rangeChars = regexString.substring(1, getMatchingMarker('[', ']', regexString) - 1)
         regex_r(regexString.substring(getMatchingMarker('[', ']', regexString)), automata ++ List(range(rangeChars.head, rangeChars.last)))
       } else if (regexString.head == '{') {
-        val repetionChars = regexString.substring(1, getMatchingMarker('{', '}', regexString) - 1)
-        if (repetionChars.size == 2) {
-          regex_r(regexString.substring(getMatchingMarker('{', '}', regexString)), automata.init ++ List(automata.last.repeat(repetionChars.head.asDigit)))
+        val repetionChars = regexString.substring(1, getMatchingMarker('{', '}', regexString) - 1).replaceAll(" ", "").split(",")
+        if (repetionChars.size == 1) {
+          regex_r(regexString.substring(getMatchingMarker('{', '}', regexString)), automata.init ++ List(automata.last.repeat(repetionChars.head.toInt)))
         } else {
-          regex_r(regexString.substring(getMatchingMarker('{', '}', regexString)), automata.init ++ List(automata.last.repeat(repetionChars.head.asDigit, repetionChars.last.asDigit)))
+          regex_r(regexString.substring(getMatchingMarker('{', '}', regexString)), automata.init ++ List(automata.last.repeat(repetionChars.head.toInt, repetionChars.last.toInt)))
         }
       } else if (regexString.head == '+') {
         val followingAutomata = regex_r(regexString.tail, List())
         if (followingAutomata.isEmpty) {
           automata.init ++ List(automata.last+)
         } else {
-          automata.init ++ List(automata.last + followingAutomata.head) ++ followingAutomata.tail
+          List(automata.reduce(_+_) + regex(regexString.tail))
         }
       } else if (regexString.head == '|') {
-        val followingAutomata = regex_r(regexString.tail, List())
-        automata.init ++ List(automata.last | followingAutomata.head) ++ followingAutomata.tail
+        List(automata.reduce(_+_) | regex(regexString.tail))
       } else if (regexString.head == '&') {
-        val followingAutomata = regex_r(regexString.tail, List())
-        automata.init ++ List(automata.last & followingAutomata.head) ++ followingAutomata.tail
+        List(automata.reduce(_+_) & regex(regexString.tail))
       } else if (regexString.head == '-') {
         val followingAutomata = regex_r(regexString.tail, List())
         automata.init ++ List(automata.last - followingAutomata.head) ++ followingAutomata.tail
