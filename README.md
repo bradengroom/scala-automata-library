@@ -1,7 +1,7 @@
 scala-automata-library
 ======================
 
-Usuage
+Usage
 -------
 ###Create Automata
 
