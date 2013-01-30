@@ -170,25 +170,25 @@ class Automaton(val startState: State, val finalStates: Set[State], val transiti
    * @return Returns an automaton that accepts the subtraction of the languages of the given automata
    */
   def minus(automaton: Automaton): Automaton = {
-    def minus_r(intersection: Automaton): Automaton = {
+    def minus_r(subtraction: Automaton): Automaton = {
       //if we have all need transitions
-      if (intersection.states.forall(state => intersection.transitions.filter(_._1 == state).size > 0)) {
-        intersection
+      if (subtraction.states.forall(state => subtraction.transitions.filter(_._1 == state).size > 0)) {
+        subtraction
       } else {
         //we need to get transitions for states that do not have transitions yet
-        val statesToExplore: Set[State] = intersection.states.filter(state => intersection.transitions.filter(transition => transition._1 == state).size == 0)
+        val statesToExplore: Set[State] = subtraction.states.filter(state => subtraction.transitions.filter(transition => transition._1 == state).size == 0)
         val transitionsToCheck: Set[(State, Char, Set[State])] = statesToExplore.flatMap(state => {
           (this.alphabet | automaton.alphabet).map(letter => {
             (state, letter, this.transitionAndEpsilonJump(state.associatedStates, letter) | automaton.transitionAndEpsilonJump(state.associatedStates, letter))
           })
         })
         val statesToAdd: Set[State] = transitionsToCheck.filter(transition => {
-          !intersection.states.map(_.associatedStates).contains(transition._3)
+          !subtraction.states.map(_.associatedStates).contains(transition._3)
         }).map(transition => new State(transition._3))
         val transitionsToAdd: Set[Transition] = transitionsToCheck.map(transition => {
-          (transition._1, transition._2, (intersection.states ++ statesToAdd).filter(_.associatedStates == transition._3).head)
+          (transition._1, transition._2, (subtraction.states ++ statesToAdd).filter(_.associatedStates == transition._3).head)
         })
-        minus_r(new Automaton(intersection.startState, (intersection.states ++ statesToAdd).filter(_.associatedStates.intersect(this.finalStates).size > 0) -- (intersection.states ++ statesToAdd).filter(_.associatedStates.intersect(automaton.finalStates).size > 0), intersection.transitions ++ transitionsToAdd))
+        minus_r(new Automaton(subtraction.startState, (subtraction.states ++ statesToAdd).filter(_.associatedStates.intersect(this.finalStates).size > 0) -- (subtraction.states ++ statesToAdd).filter(_.associatedStates.intersect(automaton.finalStates).size > 0), subtraction.transitions ++ transitionsToAdd))
       }
     }
 
@@ -216,7 +216,7 @@ class Automaton(val startState: State, val finalStates: Set[State], val transiti
   /**
    * @return Returns the automaton with no indistinguishable states
    */
-  def removeNondistinguishableStates(): Automaton = {
+  def minimize(): Automaton = {
     //Brzozowski's Algorithm
     this.reverse.getDFA.reverse.getDFA
   }
@@ -277,19 +277,15 @@ class Automaton(val startState: State, val finalStates: Set[State], val transiti
    * @param chars
    * @return Returns true if the automaton accepts the given list of characters
    */
-  def accepts(chars: List[Char]): Boolean = {
-    def accepts_r(chars: List[Char], currentStates: Set[State]): Boolean = {
-      if (chars.size == 1)
-        this.transitionAndEpsilonJump(currentStates, chars.head).intersect(this.finalStates).size > 0
-      else
-        accepts_r(chars.tail, this.transitionAndEpsilonJump(currentStates, chars.head))
-    }
-
+  def accepts(chars: List[Char], currentStates: Set[State] = Set(this.startState)): Boolean = {
     //if we are checking if the empty string is accepted, we just need to see if the start state can reach a final state through epsilon jumps
     if (chars.size == 0)
       this.epsilonJump(this.startState).intersect(this.finalStates).size > 0
+    else if (chars.size == 1)
+      this.transitionAndEpsilonJump(currentStates, chars.head).intersect(this.finalStates).size > 0
     else
-      accepts_r(chars, Set(this.startState))
+      accepts(chars.tail, this.transitionAndEpsilonJump(currentStates, chars.head))
+
   }
 
   /**
@@ -455,6 +451,9 @@ class Automaton(val startState: State, val finalStates: Set[State], val transiti
       this + repeat(min - 1)
   }
 
+  /**
+   * @return Returns an automaton that accepts 1 or more repetitions of the provided automaton's language
+   */
   def +(): Automaton = repeat(1)
 
   /**
@@ -581,10 +580,10 @@ object Automaton {
    * @return Loads the automaton saved in the given file and returns it
    */
   def load(file: File): Automaton = {
-    val bais = new FileInputStream(file)
-    val is = new ObjectInputStream(bais)
+    val fis = new FileInputStream(file)
+    val is = new ObjectInputStream(fis)
     val automaton = is.readObject().asInstanceOf[Automaton]
-    bais.close()
+    fis.close()
     is.close()
     automaton
   }

@@ -1,6 +1,7 @@
 package edu.uab.cis.regular
 
 import edu.uab.cis.State
+import scala.annotation.switch
 //case class OnePlusChar(x: Option[Char]) { def ==(c: Char) = x forall (_ == c) }
 //implicit def FromOnePlusChar(c: Char) = OnePlusChar(Some(c))
 object BasicAutomaton {
@@ -53,47 +54,44 @@ object BasicAutomaton {
   }
 
   /**
- * @param regexString
- * @return Returns the provided regular expression as an automaton
- */
-def regex(regexString: String): Automaton = {
+   * @param regexString
+   * @return Returns the provided regular expression as an automaton
+   */
+  def regex(regexString: String): Automaton = {
     def regex_r(regexString: String, automata: List[Automaton]): List[Automaton] = {
       if (regexString.isEmpty) {
         automata
-      } else if (regexString.head == '(') {
-        regex_r(regexString.substring(getMatchingMarker('(', ')', regexString)), automata ++ List(regex(regexString.substring(1, getMatchingMarker('(', ')', regexString) - 1))))
-      } else if (regexString.head == '[') {
-        val rangeChars = regexString.substring(1, getMatchingMarker('[', ']', regexString) - 1)
-        regex_r(regexString.substring(getMatchingMarker('[', ']', regexString)), automata ++ List(range(rangeChars.head, rangeChars.last)))
-      } else if (regexString.head == '{') {
-        val repetionChars = regexString.substring(1, getMatchingMarker('{', '}', regexString) - 1).replaceAll(" ", "").split(",")
-        if (repetionChars.size == 1) {
-          regex_r(regexString.substring(getMatchingMarker('{', '}', regexString)), automata.init ++ List(automata.last.repeat(repetionChars.head.toInt)))
-        } else {
-          regex_r(regexString.substring(getMatchingMarker('{', '}', regexString)), automata.init ++ List(automata.last.repeat(repetionChars.head.toInt, repetionChars.last.toInt)))
+      } else (regexString.head: @switch) match {
+        case '(' => regex_r(regexString.substring(getMatchingMarker('(', ')', regexString)), automata ++ List(regex(regexString.substring(1, getMatchingMarker('(', ')', regexString) - 1))))
+        case '[' => {
+          val rangeChars = regexString.substring(1, getMatchingMarker('[', ']', regexString) - 1)
+          regex_r(regexString.substring(getMatchingMarker('[', ']', regexString)), automata ++ List(range(rangeChars.head, rangeChars.last)))
         }
-      } else if (regexString.head == '+') {
-//        val followingAutomata = regex_r(regexString.tail, List())
-        if (regexString.tail.isEmpty) {
-          automata.init ++ List(automata.last+)
-        } else {
-          List(automata.reduce(_+_) + regex(regexString.tail))
+        case '{' => {
+          val repetionChars = regexString.substring(1, getMatchingMarker('{', '}', regexString) - 1).replaceAll(" ", "").split(",")
+          if (repetionChars.size == 1) {
+            regex_r(regexString.substring(getMatchingMarker('{', '}', regexString)), automata.init ++ List(automata.last.repeat(repetionChars.head.toInt)))
+          } else {
+            regex_r(regexString.substring(getMatchingMarker('{', '}', regexString)), automata.init ++ List(automata.last.repeat(repetionChars.head.toInt, repetionChars.last.toInt)))
+          }
         }
-      } else if (regexString.head == '|') {
-        List(automata.reduce(_+_) | regex(regexString.tail))
-      } else if (regexString.head == '&') {
-        List(automata.reduce(_+_) & regex(regexString.tail))
-      } else if (regexString.head == '-') {
-        val followingAutomata = regex_r(regexString.tail, List())
-        automata.init ++ List(automata.last - followingAutomata.head) ++ followingAutomata.tail
-      } else if (regexString.head == '*') {
-        regex_r(regexString.tail, automata.init ++ List(automata.last.repeat))
-      } else if (regexString.head == '?') {
-        regex_r(regexString.tail, automata.init ++ List(automata.last.optional))
-      } else if (regexString.head == '\\') {
-        regex_r(regexString.tail.tail, automata ++ List(char(regexString.tail.head)))
-      } else {
-        regex_r(regexString.tail, automata ++ List(char(regexString.head)))
+        case '+' => {
+          if (regexString.tail.isEmpty) {
+            automata.init ++ List(automata.last+)
+          } else {
+            List(automata.reduce(_ + _) + regex(regexString.tail))
+          }
+        }
+        case '|' => List(automata.reduce(_ + _) | regex(regexString.tail))
+        case '&' => List(automata.reduce(_ + _) & regex(regexString.tail))
+        case '-' => {
+          val followingAutomata = regex_r(regexString.tail, List())
+          automata.init ++ List(automata.last - followingAutomata.head) ++ followingAutomata.tail
+        }
+        case '*' => regex_r(regexString.tail, automata.init ++ List(automata.last.repeat))
+        case '?' => regex_r(regexString.tail, automata.init ++ List(automata.last.optional))
+        case '\\' => regex_r(regexString.tail.tail, automata ++ List(char(regexString.tail.head)))
+        case _ => regex_r(regexString.tail, automata ++ List(char(regexString.head)))
       }
     }
 
@@ -101,7 +99,7 @@ def regex(regexString: String): Automaton = {
   }
 
   private def getMatchingMarker(openMarker: Char, closeMarker: Char, string: String): Int = {
-    def getMatchingMarker_r(string: String, count: Int): Int = {
+    def getMatchingMarker_r(string: String, count: Int = 1): Int = {
       if (count == 0) {
         string.size
       } else if (string.head == closeMarker) {
@@ -114,7 +112,7 @@ def regex(regexString: String): Automaton = {
         getMatchingMarker_r(string.tail, count)
       }
     }
-    string.size - getMatchingMarker_r(string.tail, 1)
+    string.size - getMatchingMarker_r(string.tail)
   }
 
 }
